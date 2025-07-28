@@ -74,8 +74,28 @@ igra_df <- data.frame(
 # Map IGRA status to cells in merged object
 seu_merged$IGRA_status <- igra_df$IGRA_status[match(seu_merged$sample, igra_df$sample)]
 
+
+# ============================ #
+# Calculate QC Metrics         #
+# ============================ #
+
+# Calculate mitochondrial content (genes starting with "MT-")
+seu_merged[["percent_mito"]] <- PercentageFeatureSet(seu_merged, pattern = "^MT-")
+
+# Calculate ribosomal content (genes starting with RPS or RPL)
+seu_merged[["percent_ribo"]] <- PercentageFeatureSet(seu_merged, pattern = "^RP[SL]")
+
+# Calculate hemoglobin content (genes starting with HB, excluding HBP manually if needed)
+hb_genes <- grep("^HB", rownames(seu_merged), value = TRUE)
+hb_genes <- hb_genes[!grepl("^HBP", hb_genes)]
+seu_merged[["percent_hb"]] <- PercentageFeatureSet(seu_merged, features = hb_genes)
+
+# Calculate platelet content (PECAM1 or PF4 as platelet markers)
+seu_merged[["percent_plat"]] <- PercentageFeatureSet(seu_merged, pattern = "PECAM1|PF4")
+
+
 # Define output path
-save_path <- "/home/akshay-iyer/Documents/Ben_TB_HIV_Mothers/saved_R_data/seu_merged.rds"
+save_path <- "/home/akshay-iyer/Documents/Ben_TB_HIV_Mothers/saved_R_data/seu_raw_merged.rds"
 
 # Save the object
 saveRDS(seu_merged, file = save_path)
