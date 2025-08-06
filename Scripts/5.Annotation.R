@@ -52,13 +52,12 @@ rna.features <- c(
   'LDHA','LGALS1','LTA','LTB','MAF','MAL','MALAT1','MIR155HG','MKI67','MT-ND1','MT-ND5','MS4A1',
   'NELL2','NCAM1','NKG7','NR4A1','PDCD1','PRDM1','PRF1','SELL','SERPINA1','SERPING1','SH2D1A',
   'TCF7','TIGIT','TNF','TNFAIP2','TNFRSF18','TNFRSF4','TNFRSF9','TOX','TRBC1','TRDV1','TRDV2',
-  'TRGC2','TRGV9','XCL1','XCL2'
+  'TRGC2','TRGV9','XCL1','XCL2',
+  'TBX21','GATA3','RORC','IL17A','LAG3','ENTPD1','BATF3','XBP1','JCHAIN','CLEC9A','CD1C','TCF4','HIF1A'
 )
-
 # ---------------------------- #
 # Generate Plots for Each Marker
 # ---------------------------- #
-
 
 
 # Feature Plots
