@@ -107,10 +107,11 @@ for (gene in rna.features) {
   }
 }
 
+### 
 
 DotPlot2(seu_parsef_integrated, features = c("IFNG","TNF","TIGIT","LAG3","CD4","CD8A"),split.by = "IGRA_status")
 
-FeaturePlot3(seu_parsef_integrated, color = "ryb", feature.1 = "CD4", feature.2 = "CD8A", feature.3 = "CD8B", pt.size = 0.5,reduction = "umap.mnn.rna")
+FeaturePlot3(seu_parsef_integrated, color = "ryb", feature.1 = "CD4", feature.2 = "CXCR5", feature.3 = "ICOS", pt.size = 0.5,reduction = "umap.mnn.rna")
 # ---------------------------- #
 # Save Post-Subset Object
 # ---------------------------- #
