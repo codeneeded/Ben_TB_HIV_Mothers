@@ -73,6 +73,8 @@ table(seu$IGRA_Annotation)
 ### Set Idents for Plotting
 Idents(seu) <- "IGRA_Annotation"
 
+#saveRDS(seu, file = "/home/akshay-iyer/Documents/Ben_TB_HIV_Mothers/saved_R_data/seu_annotated.rds")
+
 # Path to save
 out_path <- file.path(annotation_dir, "Annotated_UMAP.png")
 
