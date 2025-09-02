@@ -135,6 +135,23 @@ plot_module <- function(obj, module_field, folder, title) {
   ggsave(file.path(folder, paste0(module_field, ".png")), gg, width = 20, height = 18, dpi = 300, bg="white")
 }
 
+# Helper to choose reference group (pos vs neg) else first level
+pick_ref_levels <- function(vec) {
+  lv <- unique(as.character(vec))
+  ref_idx <- grep("(pos|positive|igra\\+)", lv, ignore.case = TRUE)
+  if (length(ref_idx) > 0) {
+    ref <- lv[ref_idx[1]]
+    other <- setdiff(lv, ref)
+    if (length(other) == 1) return(c(ref, other))
+  }
+  # Fallback: first two unique levels in order encountered
+  if (length(lv) >= 2) return(lv[1:2])
+  return(lv)
+}
+
+# Compute Wilcoxon p and HL shift per module x cluster
+module_stats <- list()
+
 coverage <- data.frame()
 
 for (family in names(modules)) {
@@ -142,24 +159,85 @@ for (family in names(modules)) {
   dir.create(family_dir, showWarnings = FALSE)
   for (sub in names(modules[[family]])) {
     mod_name <- paste(family, sub, sep="_")
+    field <- paste0("MS_", mod_name)
     seu <- score_module(seu, modules[[family]][[sub]], mod_name)
-    plot_module(seu, paste0("MS_", mod_name), family_dir, paste(family, "-", sub))
+    plot_module(seu, field, family_dir, paste(family, "-", sub))
+    
     present <- intersect(modules[[family]][[sub]], rownames(seu))
     missing <- setdiff(modules[[family]][[sub]], present)
     coverage <- rbind(coverage,
                       data.frame(Module=mod_name, Present=length(present), Missing=length(missing),
-                                 Present_Genes=paste(present, collapse=";"), Missing_Genes=paste(missing, collapse=";"))
+                                 Present_Genes=paste(present, collapse=";"),
+                                 Missing_Genes=paste(missing, collapse=";"))
     )
+    
+    # Collect stats per cluster
+    md <- seu@meta.data
+    if (!field %in% colnames(md)) next
+    md <- md[!is.na(md[[group_col]]) & !is.na(md[[cluster_col]]) & !is.na(md[[field]]), 
+             c(group_col, cluster_col, field)]
+    if (nrow(md) == 0) next
+    
+    for (cl in sort(unique(md[[cluster_col]]))) {
+      subdf <- md[md[[cluster_col]] == cl, ]
+      grps <- unique(as.character(subdf[[group_col]]))
+      if (length(grps) != 2) {
+        module_stats[[length(module_stats)+1]] <- data.frame(
+          Module = mod_name, Cluster = cl, PValue = NA_real_, HL_Shift = NA_real_
+        )
+        next
+      }
+      
+      # Pick consistent order: ref (pos) vs other; HL_Shift is ref - other
+      ord <- pick_ref_levels(subdf[[group_col]])
+      if (length(ord) != 2) {
+        module_stats[[length(module_stats)+1]] <- data.frame(
+          Module = mod_name, Cluster = cl, PValue = NA_real_, HL_Shift = NA_real_
+        )
+        next
+      }
+      
+      x <- subdf[subdf[[group_col]] == ord[1], field]
+      y <- subdf[subdf[[group_col]] == ord[2], field]
+      
+      # Require minimal n per group
+      if (length(x) < 3 || length(y) < 3) {
+        module_stats[[length(module_stats)+1]] <- data.frame(
+          Module = mod_name, Cluster = cl, PValue = NA_real_, HL_Shift = NA_real_
+        )
+        next
+      }
+      
+      wt <- tryCatch(
+        wilcox.test(x, y, alternative = "two.sided", exact = FALSE, conf.int = TRUE),
+        error = function(e) NULL
+      )
+      if (is.null(wt)) {
+        module_stats[[length(module_stats)+1]] <- data.frame(
+          Module = mod_name, Cluster = cl, PValue = NA_real_, HL_Shift = NA_real_
+        )
+      } else {
+        # wt$estimate is the Hodges–Lehmann location shift (x - y) when conf.int=TRUE
+        hl <- unname(if (!is.null(wt$estimate)) wt$estimate else median(x) - median(y))
+        module_stats[[length(module_stats)+1]] <- data.frame(
+          Module = mod_name,
+          Cluster = cl,
+          PValue = wt$p.value,
+          HL_Shift = hl
+        )
+      }
+    }
   }
 }
 
-# Composite autophagy index
-if (all(c("MS_Autophagy_mTORC","MS_Autophagy_AMPK") %in% colnames(seu@meta.data))) {
-  seu$MS_Autophagy_RegIndex <- seu$MS_Autophagy_AMPK - seu$MS_Autophagy_mTORC
-  plot_module(seu, "MS_Autophagy_RegIndex", file.path(out_dir,"Autophagy"), "Autophagy Regulation Index (AMPK - mTORC)")
-}
-
+# -----------------------------
+# Outputs
+# -----------------------------
+# Coverage table
 write_tsv(coverage, file.path(out_dir, "Module_Gene_Coverage.tsv"))
-saveRDS(seu, file.path(out_dir, "seu_with_all_submodules.rds"))
 
-message("Done. One folder per family, one file per submodule.")
+# Stats table (Module x Cluster with p-value and HL shift)
+stats_df <- dplyr::bind_rows(module_stats)
+stats_csv <- file.path(out_dir, "Module_Stats_byCluster.csv")
+readr::write_csv(stats_df, stats_csv)
+
