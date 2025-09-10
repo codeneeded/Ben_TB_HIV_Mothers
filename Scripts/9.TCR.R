@@ -243,296 +243,31 @@ percentKmer(combined.TCR.PARSE,
 ggsave('Heatmap_TRB_kmer.png',width=12,height=9)
 
 
-
-
-############################### Clonal Diversity and Overlap #####################################################
-setwd('/home/akshay-iyer/Documents/Ben_TB_HIV_Mothers/TCR/Clonal_Diversity')
-
-
-clonalDiversity(combined.TCR.PARSE, 
-                cloneCall = "strict")
-ggsave('TARA_Clonal_Diversity_Strict.png',width=12,height=9)
-
-clonalOverlap(combined.TCR.PARSE, 
-              cloneCall = "strict", 
-              method = "morisita")
-ggsave('TARA_Clonal_Overlap_Strict_morisita.png',width=24,height=11)
-
-clonalOverlap(combined.TCR.PARSE, 
-              cloneCall = "strict", 
-              method = "raw")
-ggsave('TARA_Clonal_Overlap_Strict_raw.png',width=24,height=11)
-
-
-setwd('~/Documents/CD8_Longitudinal/VDJ/TCR/Clonal_Diversity/By_Sample')
-
-
-################# Clonal Clustering ############################3
-#raph representation of TCR sequences that are grouped based on their similarity (edit distance threshold of 0.85). 
-#The network structure helps identify clonal expansions and relationships between TCR sequences.
-#Clustering 
-#Nodes (Vertices): Represent unique TCR sequences (or clonotypes).
-#Edges (Links): Indicate that two clonotypes are similar (i.e., have an edit distance below the set threshold of 0.85).
-#Clusters (Communities): Groups of connected nodes represent TCR sequences that are considered part of the same clonal family.
-#Highly connected clusters → Groups of similar TCRs (shared clonal families).
-#Larger nodes → Higher clonal expansion.
-#Different colors → Different samples, allowing comparison of TCR sharing across conditions.
-#Sparse or isolated nodes → Unique or sample-specific clonotypes.
-library(igraph)
-
-
-# Clustering samples for TRA (threshold 0.90)
-igraph.TRA <- clonalCluster(
-  combined.TCR.EARTH[c("SA_TY_026_V2", "SA_TY_026_V5", "SA_TY_026_V6", "SA_TY_026_V7")],
-  chain = "TRA",
-  sequence = "aa",
-  group.by = "sample",
-  threshold = 0.90, 
-  exportGraph = TRUE
-)
-
-# Clustering samples for TRB (threshold 0.85)
-igraph.TRB <- clonalCluster(
-  combined.TCR.EARTH[c("SA_TY_026_V2", "SA_TY_026_V5", "SA_TY_026_V6", "SA_TY_026_V7")],
-  chain = "TRB",
-  sequence = "aa",
-  group.by = "sample",
-  threshold = 0.85, 
-  exportGraph = TRUE
-)
-
-# Setting color scheme
-custom_colors <- c(
-  "#E41A1C", "#377EB8", "#4DAF4A", "#984EA3", "#FF7F00",
-  "#FFFF33", "#A65628", "#F781BF", "#999999", "#66C2A5",
-  "#FC8D62", "#8DA0CB", "#A6D854", "#FFD92F", "#E5C494"
-)
-
-# Function to set colors and order legend dynamically
-set_colors_and_legend <- function(igraph.object) {
-  col_legend <- factor(igraph::V(igraph.object)$group)
-  color.legend <- unique(igraph::V(igraph.object)$group)
-  
-  # Order legend from longest to shortest sample names
-  ordered_indices <- order(nchar(color.legend), decreasing = TRUE)
-  color.legend <- color.legend[ordered_indices]
-  
-  # Assign distinct colors dynamically based on this order
-  num_colors <- length(color.legend)  # Using ordered legend length
-  col_samples <- custom_colors[seq_len(num_colors)][ordered_indices]  # Ensure color order matches legend
-  
-  return(list(col_legend = col_legend, color.legend = color.legend, col_samples = col_samples))
-}
-
-# Apply function for TRA and TRB
-TRA_colors <- set_colors_and_legend(igraph.TRA)
-TRB_colors <- set_colors_and_legend(igraph.TRB)
-
-# Function to plot graph without edge arrows
-plot_igraph <- function(igraph.object, col_samples, color.legend, title_text) {
-  plot(
-    igraph.object,
-    vertex.size     = sqrt(igraph::V(igraph.object)$size),
-    vertex.label    = NA,
-    edge.arrow.size = 0,   # Removes edge arrows (bidirectional)
-    edge.curved     = 0.3,
-    vertex.color    = col_samples
-  )
-  
-  # Add ordered legend
-  legend(
-    "topleft", 
-    legend = color.legend, 
-    pch = 16, 
-    col = unique(col_samples), 
-    bty = "n"
-  )
-  
-  # Add title
-  title(title_text, cex.main = 1.5, font.main = 2)
-}
-
-# Set working directory
-setwd('~/Documents/CD8_Longitudinal/VDJ/TCR/Network_Analysis/EARTH')
-paste( c("CP020_V1", "CP020_V12", "CP020_V44"), collapse = "_")
-# Save TRA plot as a high-quality PNG using Cairo
-CairoPNG("SA_TY_026_TRA.png", width = 7200, height = 5500, res = 500)  # Higher resolution
-plot_igraph(igraph.TRA, TRA_colors$col_samples, TRA_colors$color.legend, "SA_TY_026 TRA Sequences (Threshold 0.90)")
-dev.off()  # Close Cairo device
-
-# Save TRB plot as a high-quality PNG using Cairo
-CairoPNG("SA_TY_026_TRB.png", width = 7200, height = 5500, res = 500)
-plot_igraph(igraph.TRB, TRB_colors$col_samples, TRB_colors$color.legend, "SA_TY_026 TRB Sequences (Threshold 0.85)")
-dev.off()  # Close Cairo device
-
-############################################################ Clonal Clustering #################################################################
-
-
-# Function to set colors and order legend dynamically
-set_colors_and_legend <- function(igraph.object) {
-  col_legend <- factor(igraph::V(igraph.object)$group)
-  color.legend <- unique(igraph::V(igraph.object)$group)
-  
-  # Order legend from longest to shortest sample names
-  ordered_indices <- order(nchar(color.legend), decreasing = TRUE)
-  color.legend <- color.legend[ordered_indices]
-  
-  # Assign distinct colors dynamically based on this order
-  num_colors <- length(color.legend)  # Using ordered legend length
-  col_samples <- custom_colors[seq_len(num_colors)][ordered_indices]  # Ensure color order matches legend
-  
-  return(list(col_legend = col_legend, color.legend = color.legend, col_samples = col_samples))
-}
-
-# Function to plot graph without edge arrows
-plot_igraph <- function(igraph.object, col_samples, color.legend, title_text) {
-  plot(
-    igraph.object,
-    vertex.size     = sqrt(igraph::V(igraph.object)$size),
-    vertex.label    = NA,
-    edge.arrow.size = 0,   # Removes edge arrows (bidirectional)
-    edge.curved     = 0.3,
-    vertex.color    = col_samples
-  )
-  
-  # Add ordered legend
-  legend(
-    "topleft", 
-    legend = color.legend, 
-    pch = 16, 
-    col = unique(col_samples), 
-    bty = "n"
-  )
-  
-  # Add title
-  title(title_text, cex.main = 1.5, font.main = 2)
-}
-
-# Define color scheme (same for all runs)
-custom_colors <- c(
-  "#E41A1C", "#377EB8", "#4DAF4A", "#984EA3", "#FF7F00",
-  "#FFFF33", "#A65628", "#F781BF", "#999999", "#66C2A5",
-  "#FC8D62", "#8DA0CB", "#A6D854", "#FFD92F", "#E5C494"
-)
-
-# Define sample groupings
-earth_cohort <- list(
-  c("SA_CH_009_V1", "SA_CH_009_V5", "SA_CH_009_V7", "SA_CH_009_V9"),
-  c("SA_TY_026_V2", "SA_TY_026_V5", "SA_TY_026_V6", "SA_TY_026_V7"),
-  c("SA_AH_004_V0", "SA_AH_004_V1")
-)
-
-tara_cohort <- list(
-  c("CP020_V1", "CP020_V12", "CP020_V44"),
-  c("CP018_entry", "CP018_V24", "CP018_42m"),
-  c("CP013_1m", "CP013_12m", "CP013_24m"),
-  c("CP006_entry", "CP006_12m", "CP006_V24"),
-  c("CP003_entry", "CP003_V12", "CP003_V24")
-)
-
-# Function to process and save TRA and TRB graphs for each cohort
-process_cohort <- function(cohort_samples, dataset, save_dir) {
-  
-  # Set working directory for cohort
-  setwd(save_dir)
-  
-  for (samples in cohort_samples) {
-    
-    # Generate file name prefix from sample names
-    sample_label <- unique(sub("(_[A-Za-z0-9]+)?$", "", samples)) # Removes last _ and whatever follows and picks common remnant
-    
-    # Clustering for TRA (threshold 0.90)
-    igraph.TRA <- clonalCluster(
-      dataset[samples],
-      chain = "TRA",
-      sequence = "aa",
-      group.by = "sample",
-      threshold = 0.90, 
-      exportGraph = TRUE
-    )
-    
-    # Clustering for TRB (threshold 0.85)
-    igraph.TRB <- clonalCluster(
-      dataset[samples],
-      chain = "TRB",
-      sequence = "aa",
-      group.by = "sample",
-      threshold = 0.85, 
-      exportGraph = TRUE
-    )
-    
-    # Assign colors
-    TRA_colors <- set_colors_and_legend(igraph.TRA)
-    TRB_colors <- set_colors_and_legend(igraph.TRB)
-    
-    # Save TRA plot
-    CairoPNG(paste0(sample_label, "_TRA.png"), width = 7200, height = 5500, res = 500)
-    plot_igraph(igraph.TRA, TRA_colors$col_samples, TRA_colors$color.legend, paste0(sample_label, " TRA Sequences (Threshold 0.90)"))
-    dev.off()
-    
-    # Save TRB plot
-    CairoPNG(paste0(sample_label, "_TRB.png"), width = 7200, height = 5500, res = 500)
-    plot_igraph(igraph.TRB, TRB_colors$col_samples, TRB_colors$color.legend, paste0(sample_label, " TRB Sequences (Threshold 0.85)"))
-    dev.off()
-    
-    print(paste0("Saved: ", sample_label, " in ", save_dir))
-  }
-}
-
-# Process EARTH cohort
-process_cohort(earth_cohort, combined.TCR.EARTH, "~/Documents/CD8_Longitudinal/VDJ/TCR/Network_Analysis/EARTH")
-
-# Process TARA cohort
-process_cohort(tara_cohort, combined.TCR.PARSE, "~/Documents/CD8_Longitudinal/VDJ/TCR/Network_Analysis/TARA")
-
 ############## Merge with seurat object ###################################
 
-load(paste0(load.path,'TARA_ALL_WNN.Rdata'))
-load(paste0(load.path,'TARA_HEI_WNN.Rdata'))
-load(paste0(load.path,'EARTH_WNN.Rdata'))
+seu <- readRDS(paste0(load.path,'seu_with_all_submodules.rds'))
 
 ############ Merge Seurat #####################
 
-# TARA All
+
 # Access the cell barcodes (Assuming they are in the column names of the data slot)
-barcodes <- rownames(TARA_ALL[[]])
-
-# Use gsub to modify the barcodes, removing everything before and including the third '_'
-modified_barcodes <- gsub(".*_.*_.*_(.*)", "\\1", barcodes)
-modified_barcodes <- paste0(TARA_ALL$orig.ident, "_", modified_barcodes)
-
-# Assign the modified barcodes back to the Seurat object
-TARA_ALL <- RenameCells(TARA_ALL, new.names = modified_barcodes)
+rownames(seu[[]]) ### View barcode structure in seurat
+combined.TCR.PARSE$sample_1273088$barcode ### View barcode structure in combined tcr parse
 
 
-# TARA HEI
-# Access the cell barcodes (Assuming they are in the column names of the data slot)
-barcodes <- rownames(TARA_HEI[[]])
-
-# Use gsub to modify the barcodes, removing everything before and including the third '_'
-modified_barcodes <- gsub(".*_.*_.*_(.*)", "\\1", barcodes)
-modified_barcodes <- paste0(TARA_HEI$orig.ident, "_", modified_barcodes)
-
-# Assign the modified barcodes back to the Seurat object
-TARA_HEI <- RenameCells(TARA_HEI, new.names = modified_barcodes)
-
-
-# EARTH
-# Access the cell barcodes (Assuming they are in the column names of the data slot)
-barcodes <- rownames(EARTH[[]])
-
-# Use gsub to modify the barcodes, removing everything before and including the third '_'
-modified_barcodes <- gsub(".*_.*_(.*)", "\\1", barcodes)
-modified_barcodes <- paste0(EARTH$orig.ident, "_", modified_barcodes)
-
-# Assign the modified barcodes back to the Seurat object
-EARTH <- RenameCells(EARTH, new.names = modified_barcodes)
+# Assuming 'seuratObj' is your Seurat object
+cell.barcodes <- rownames(seu[[]])
+# removing the _1 at the end of the barcodes (adjust regex if your suffix differs)
+# cell.barcodes <- stringr::str_split(cell.barcodes, "_", simplify = TRUE)[,1]
+# adding the prefix of the orig.ident to the barcodes, assuming that is the sample IDs
+cell.barcodes <- paste0(seu$orig.ident, "_", cell.barcodes)
+seu <- RenameCells(seu, new.names = cell.barcodes)
 
 
 ########## Combine TCR Expression with Seurat Object
 
-TARA_ALL <- combineExpression(combined.TCR.PARSE, 
-                              TARA_ALL, 
+seu <- combineExpression(combined.TCR.PARSE, 
+                              seu, 
                               cloneCall="strict",
                               chain='both',
                               group.by = 'sample',
@@ -540,184 +275,99 @@ TARA_ALL <- combineExpression(combined.TCR.PARSE,
                                               500),
                               proportion = FALSE)
 
-TARA_HEI <- combineExpression(combined.TCR.PARSE, 
-                              TARA_HEI, 
-                              cloneCall="strict",
-                              chain='both',
-                              group.by = 'sample',
-                              cloneSize = c(Single = 1, Small = 5, Medium = 20, Large = 100, Hyperexpanded =
-                                              500),
-                              proportion = FALSE)
-
-EARTH <- combineExpression(combined.TCR.EARTH, 
-                           EARTH, 
-                           cloneCall="strict",
-                           chain='both',
-                           group.by = 'sample',
-                           cloneSize = c(Single = 1, Small = 5, Medium = 20, Large = 100, Hyperexpanded =
-                                           500),
-                           proportion = FALSE)
 
 
 ######################################################################### Seurat Hyperexpansion Visualisations #################################################
 
-setwd('~/Documents/CD8_Longitudinal/VDJ/TCR/Seurat_Plots/Hyperexpansion')
+setwd('/home/akshay-iyer/Documents/Ben_TB_HIV_Mothers/TCR/Seurat_Plots/Hyperexpansion')
 
 
 #Define color palette 
 colorblind_vector <- hcl.colors(n=7, palette = "plasma", fixup = TRUE)
 
-DimPlot_scCustom(TARA_ALL, group.by = "cloneSize", reduction = 'wnn.umap') +
+DimPlot_scCustom(seu, group.by = "cloneSize", reduction = 'umap.mnn.rna') +
   scale_color_manual(values=rev(colorblind_vector[c(1,3,4,5,7)]))
-ggsave('TARA_ALL_Hyperexpansion.png',width=8,height=7)
+ggsave('Clonal_Hyperexpansion_All.png',width=8,height=7)
 
 
-DimPlot_scCustom(TARA_ALL, group.by = "cloneSize", reduction = 'wnn.umap',split.by = 'Condition',split_seurat = T) +
+DimPlot_scCustom(seu, group.by = "cloneSize", reduction = 'umap.mnn.rna',split.by = 'IGRA_status',split_seurat = T) +
   scale_color_manual(values=rev(colorblind_vector[c(1,3,4,5,7)]))
-ggsave('EARTH_Clonal_Comparison_SA_AH_004.png',width=15,height=11)
+ggsave('Clonal_Hyperexpansion_by_IGRA_Status.png',width=15,height=11)
 
-
-DimPlot_scCustom(TARA_HEI, group.by = "cloneSize", reduction = 'wnn.umap') +
-  scale_color_manual(values=rev(colorblind_vector[c(1,3,4,5,7)]))
-ggsave('TARA_HEI_Hyperexpansion.png',width=8,height=7)
-
-
-DimPlot_scCustom(EARTH, group.by = "cloneSize", reduction = 'wnn.umap') +
-  scale_color_manual(values=rev(colorblind_vector[c(1,3,4,5,7)]))
-ggsave('EARTH_Hyperexpansion.png',width=8,height=7)
 
 ### Clones per cluster
-setwd('~/Documents/CD8_Longitudinal/VDJ/TCR/Seurat_Plots/Cloness_per_Cluster')
+setwd('/home/akshay-iyer/Documents/Ben_TB_HIV_Mothers/TCR/Seurat_Plots/Clones_per_Cluster')
 
 ### TARA ALL
-clonalOccupy(TARA_ALL, 
-             x.axis = "snn.louvianmlr_1",
+clonalOccupy(seu, 
+             x.axis = "IGRA_Annotation",
              label = F)
-ggsave('TARA_All_Clonal_Occupancy.png',width=17,height=11)
-clonalOccupy(TARA_ALL, 
-             x.axis = "snn.louvianmlr_1",
+ggsave('Clonal_Occupancy_raw.png',width=17,height=11)
+
+clonalOccupy(seu, 
+             x.axis = "IGRA_Annotation",
              proportion = T,
              label = F)
-ggsave('TARA_All_Clonal_Occupancy_proportion.png',width=17,height=11)
+ggsave('Clonal_Occupancy_proportion.png',width=17,height=11)
 
-table <- clonalOccupy(TARA_ALL, x.axis = "snn.louvianmlr_1", exportTable = TRUE)
-write.csv(table,'TARA_All_Clones_per_Cluster.csv',row.names = F)
-
-clonalOccupy(TARA_ALL, 
-             x.axis = "predicted.celltype.l2",
-             label = F)
-ggsave('TARA_All_Clonal_Occupancy_Azimuth.png',width=27,height=11)
-clonalOccupy(TARA_ALL, 
-             x.axis = "predicted.celltype.l2",
-             proportion = T,
-             label = F)
-ggsave('TARA_All_Clonal_Occupancy_proportion_Azimuth.png',width=27,height=11)
-
-table <- clonalOccupy(TARA_ALL, x.axis = "predicted.celltype.l2", exportTable = TRUE)
-write.csv(table,'TARA_All_Clones_per_Cluster_Azimuth.csv',row.names = F)
-
-
-### TARA HEI
-clonalOccupy(TARA_HEI, 
-             x.axis = "snn.louvianmlr_1",
-             label = F)
-ggsave('TARA_HEI_Clonal_Occupancy.png',width=17,height=11)
-clonalOccupy(TARA_HEI, 
-             x.axis = "snn.louvianmlr_1",
-             proportion = T,
-             label = F)
-ggsave('TARA_HEI_Clonal_Occupancy_proportion.png',width=17,height=11)
-
-table <- clonalOccupy(TARA_HEI, x.axis = "snn.louvianmlr_1", exportTable = TRUE)
-write.csv(table,'TARA_HEI_Clones_per_Cluster.csv',row.names = F)
-
-clonalOccupy(TARA_HEI, 
-             x.axis = "predicted.celltype.l2",
-             label = F)
-ggsave('TARA_HEI_Clonal_Occupancy_Azimuth.png',width=27,height=11)
-clonalOccupy(TARA_HEI, 
-             x.axis = "predicted.celltype.l2",
-             proportion = T,
-             label = F)
-ggsave('TARA_HEI_Clonal_Occupancy_proportion_Azimuth.png',width=27,height=11)
-
-table <- clonalOccupy(TARA_HEI, x.axis = "predicted.celltype.l2", exportTable = TRUE)
-write.csv(table,'TARA_HEIClones_per_Cluster_Azimuth.csv',row.names = F)
-
-### EARTH
-clonalOccupy(EARTH, 
-             x.axis = "snn.louvianmlr_1",
-             label = F)
-ggsave('EARTH_Clonal_Occupancy.png',width=17,height=11)
-clonalOccupy(EARTH, 
-             x.axis = "snn.louvianmlr_1",
-             proportion = T,
-             label = F)
-ggsave('EARTH_Clonal_Occupancy_proportion.png',width=17,height=11)
-
-table <- clonalOccupy(EARTH, x.axis = "snn.louvianmlr_1", exportTable = TRUE)
-write.csv(table,'TARA_All_Clones_per_Cluster.csv',row.names = F)
-
-clonalOccupy(EARTH, 
-             x.axis = "predicted.celltype.l2",
-             label = F)
-ggsave('EARTH_Clonal_Occupancy_Azimuth.png',width=27,height=11)
-clonalOccupy(EARTH, 
-             x.axis = "predicted.celltype.l2",
-             proportion = T,
-             label = F)
-ggsave('EARTH_Clonal_Occupancy_proportion_Azimuth.png',width=27,height=11)
-
-table <- clonalOccupy(EARTH, x.axis = "predicted.celltype.l2", exportTable = TRUE)
-write.csv(table,'EARTH_Clones_per_Cluster_Azimuth.csv',row.names = F)
+table <- clonalOccupy(seu, x.axis = "IGRA_Annotation", exportTable = TRUE)
+write.csv(table,'Clones_per_Cluster.csv',row.names = F)
 
 #### Clonal Overlay ####
 
-setwd('~/Documents/CD8_Longitudinal/VDJ/TCR/Seurat_Plots/Clonal_Overlay')
+setwd('/home/akshay-iyer/Documents/Ben_TB_HIV_Mothers/TCR/Seurat_Plots/Clonal_Overlay')
 #Dr. Francesco Mazziotta and inspired by Drs. Carmona and Andreatta and their work with ProjectTIL,
-clonalOverlay(TARA_ALL, 
-              reduction = "wnn.umap", 
-              cutpoint = 1, 
-              bins = 10, 
-              facet.by = "orig.ident") + 
-  guides(color = "none")
-ggsave('TARA_Clonal_Overlay_By_Sample.png',width=22,height=17)
-
-
-clonalOverlay(TARA_ALL, 
-              reduction = "wnn.umap", 
-              cutpoint = 10, 
-              bins = 25, 
-              facet.by = "Condition") + 
-  guides(color = "none")
-ggsave('TARA_Clonal_Overlay_By_Condition.png',width=17,height=9)
-
-
-clonalOverlay(EARTH, 
-              reduction = "wnn.umap", 
-              cutpoint = 10, 
+clonalOverlay(seu, 
+              reduction = "umap.mnn.rna", 
+              cutpoint = 5, 
               bins = 25, 
               facet.by = "orig.ident") + 
   guides(color = "none")
-ggsave('EARTH_Clonal_Overlay_By_Sample.png',width=18,height=13)
+ggsave('Clonal_Overlay_By_Sample_cutp5.png',width=22,height=17)
+
+
+clonalOverlay(seu, 
+              reduction = "umap.mnn.rna", 
+              cutpoint = 5, 
+              bins = 25, 
+              facet.by = "IGRA_status") + 
+  guides(color = "none")
+ggsave('Clonal_Overlay_By_Condition_cutp5.png',width=17,height=9)
+
 
 
 #### TCRX ####
 library (Trex)
-setwd('~/Documents/CD8_Longitudinal/VDJ/TCR/Trex')
+setwd('/home/akshay-iyer/Documents/Ben_TB_HIV_Mothers/TCR/Trex')
 
-TARA_ALL_TRB_0 <- annotateDB(TARA_ALL, 
+seu_TRB_0 <- annotateDB(seu, 
                              chains = "TRB")
 
-TARA_ALL_TRB_1 <- annotateDB(TARA_ALL, 
+seu_TRB_1 <- annotateDB(seu, 
                              chains = "TRB", edit.distance = 1)
 
-TARA_ALL_TRB_2 <- annotateDB(TARA_ALL, 
+seu_TRB_2 <- annotateDB(seu, 
                              chains = "TRB", edit.distance = 2)
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+############################33 DIDNT SEE ANY REAL SPECIFICITY STOPPED  ###############################
 # Extract metadata to dataframe with reordered columns
-TARA_TRB_df_0 <- TARA_ALL_TRB_0@meta.data %>%
+seu_TRB_df_0 <- seu_TRB_0@meta.data %>%
   dplyr::select(
     cells,
     PID = orig.ident,
@@ -736,7 +386,7 @@ TARA_TRB_df_0 <- TARA_ALL_TRB_0@meta.data %>%
   dplyr::filter(!is.na(clonalFrequency) & clonalFrequency > 1)
 
 # For edit distance 1
-TARA_TRB_df_1 <- TARA_ALL_TRB_1@meta.data %>%
+seu_TRB_df_1 <- seu_TRB_1@meta.data %>%
   dplyr::select(
     cells,
     PID = orig.ident,
@@ -755,7 +405,7 @@ TARA_TRB_df_1 <- TARA_ALL_TRB_1@meta.data %>%
   dplyr::filter(!is.na(clonalFrequency) & clonalFrequency > 1)
 
 # For edit distance 2
-TARA_TRB_df_2 <- TARA_ALL_TRB_2@meta.data %>%
+seu_TRB_df_2 <- seu_TRB_2@meta.data %>%
   dplyr::select(
     cells,
     PID = orig.ident,
@@ -774,31 +424,31 @@ TARA_TRB_df_2 <- TARA_ALL_TRB_2@meta.data %>%
   dplyr::filter(!is.na(clonalFrequency) & clonalFrequency > 1)
 
 # Rename TRB columns by edit distance (keeping other columns untouched)
-TARA_TRB_df_0_labeled <- TARA_TRB_df_0 %>%
+seu_TRB_df_0_labeled <- seu_TRB_df_0 %>%
   rename_with(~ paste0(., "_ED0"), starts_with("TRB_"))
 
-TARA_TRB_df_1_labeled <- TARA_TRB_df_1 %>%
+seu_TRB_df_1_labeled <- seu_TRB_df_1 %>%
   rename_with(~ paste0(., "_ED1"), starts_with("TRB_"))
 
-TARA_TRB_df_2_labeled <- TARA_TRB_df_2 %>%
+seu_TRB_df_2_labeled <- seu_TRB_df_2 %>%
   rename_with(~ paste0(., "_ED2"), starts_with("TRB_"))
 
 # Define the **key columns** for joining
 key_cols <- c("cells", "PID", "Age", "Viral_Load", "cluster", "CTstrict", "clonalFrequency")
 
 # Now **full join them by the key columns**
-TARA_TRB_combined <- TARA_TRB_df_0_labeled %>%
-  full_join(TARA_TRB_df_1_labeled, by = key_cols) %>%
-  full_join(TARA_TRB_df_2_labeled, by = key_cols)
+seu_TRB_combined <- seu_TRB_df_0_labeled %>%
+  full_join(seu_TRB_df_1_labeled, by = key_cols) %>%
+  full_join(seu_TRB_df_2_labeled, by = key_cols)
 
 
-TARA_TRB_combined <- TARA_TRB_combined %>%
+seu_TRB_combined <- seu_TRB_combined %>%
   mutate(PID = sub("_.*$", "", PID))
 
 
 
 # Pivot TRB_Epitope.target columns to long format
-TARA_TRB_long_fixed <- TARA_TRB_combined %>%
+seu_TRB_long_fixed <- seu_TRB_combined %>%
   pivot_longer(
     cols = starts_with("TRB_Epitope.target"),
     names_to = "Edit_Distance",
@@ -812,7 +462,7 @@ TARA_TRB_long_fixed <- TARA_TRB_combined %>%
 
 ############### Pivot both species and target
 # Pivot target
-epitope_target_long <- TARA_TRB_combined %>%
+epitope_target_long <- seu_TRB_combined %>%
   pivot_longer(
     cols = starts_with("TRB_Epitope.target"),
     names_to = "Edit_Distance",
@@ -821,7 +471,7 @@ epitope_target_long <- TARA_TRB_combined %>%
   )
 
 # Pivot species
-epitope_species_long <- TARA_TRB_combined %>%
+epitope_species_long <- seu_TRB_combined %>%
   pivot_longer(
     cols = starts_with("TRB_Epitope.species"),
     names_to = "Edit_Distance",
@@ -830,7 +480,7 @@ epitope_species_long <- TARA_TRB_combined %>%
   )
 
 # Join them by cell ID, clone, and edit distance
-TARA_TRB_long_species <- epitope_target_long %>%
+seu_TRB_long_species <- epitope_target_long %>%
   select(cells, PID, Age, CTstrict, clonalFrequency, Edit_Distance, Epitope_Target) %>%
   left_join(
     epitope_species_long %>%
@@ -844,7 +494,7 @@ TARA_TRB_long_species <- epitope_target_long %>%
 ######
 
 # Plot with CTstrict fill, no legend
-ggplot(TARA_TRB_long_fixed, aes(x = Epitope_Target, y = clonalFrequency, fill = CTstrict)) +
+ggplot(seu_TRB_long_fixed, aes(x = Epitope_Target, y = clonalFrequency, fill = CTstrict)) +
   geom_bar(stat = "identity", position = "stack") +
   facet_wrap(~Edit_Distance) +
   theme(
@@ -858,7 +508,7 @@ ggplot(TARA_TRB_long_fixed, aes(x = Epitope_Target, y = clonalFrequency, fill = 
 
 # Plot
 # Full Plot 1 – Including All Epitope Targets
-ggplot(TARA_TRB_long_fixed, aes(x = Epitope_Target, y = clonalFrequency, fill = CTstrict)) +
+ggplot(seu_TRB_long_fixed, aes(x = Epitope_Target, y = clonalFrequency, fill = CTstrict)) +
   geom_bar(stat = "identity", position = "stack") +
   facet_wrap(~Edit_Distance, ncol = 1) +
   theme_minimal(base_size = 16) +
@@ -876,14 +526,14 @@ ggplot(TARA_TRB_long_fixed, aes(x = Epitope_Target, y = clonalFrequency, fill = 
   xlab("Epitope Target") +
   ggtitle("Clonal Frequency per Epitope Target split by Clone and Edit Distance")
 
-ggsave('Tara_TRB_ClonalFreq_vs_Target.png', width = 18, height = 13, dpi = 300, bg = 'white')
+ggsave('seu_TRB_ClonalFreq_vs_Target.png', width = 18, height = 13, dpi = 300, bg = 'white')
 
 # Remove Unknown Targets
-TARA_TRB_long_no_unknown <- TARA_TRB_long_fixed %>%
+seu_TRB_long_no_unknown <- seu_TRB_long_fixed %>%
   filter(Epitope_Target != "Unknown")
 
 # Full Plot 2 – Excluding Unknown Epitope Targets
-ggplot(TARA_TRB_long_no_unknown, aes(x = Epitope_Target, y = clonalFrequency, fill = CTstrict)) +
+ggplot(seu_TRB_long_no_unknown, aes(x = Epitope_Target, y = clonalFrequency, fill = CTstrict)) +
   geom_bar(stat = "identity", position = "stack") +
   facet_wrap(~Edit_Distance, ncol = 1) +
   theme_minimal(base_size = 16) +
@@ -901,12 +551,12 @@ ggplot(TARA_TRB_long_no_unknown, aes(x = Epitope_Target, y = clonalFrequency, fi
   xlab("Epitope Target") +
   ggtitle("Clonal Frequency per Epitope Target split by Clone and Edit Distance (Excluding Unknown)")
 
-ggsave('Tara_TRB_ClonalFreq_vs_Target_Unkownexclude.png', width = 20, height = 13, dpi = 300, bg = 'white')
+ggsave('seu_TRB_ClonalFreq_vs_Target_Unkownexclude.png', width = 20, height = 13, dpi = 300, bg = 'white')
 
-write_csv(TARA_TRB_combined,'Trex_TRB_Epitope_Database.csv')
+write_csv(seu_TRB_combined,'Trex_TRB_Epitope_Database.csv')
 
 # Redo the long format while retaining PID, Age and other metadata
-TARA_TRB_long_fixed <- TARA_TRB_combined %>%
+seu_TRB_long_fixed <- seu_TRB_combined %>%
   pivot_longer(
     cols = starts_with("TRB_Epitope.target"),
     names_to = "Edit_Distance",
@@ -917,18 +567,18 @@ TARA_TRB_long_fixed <- TARA_TRB_combined %>%
   distinct(PID, Age, CTstrict, Edit_Distance, Epitope_Target, clonalFrequency)
 
 # Now summarize by Edit Distance, PID, Age, and Epitope Target
-TARA_TRB_summary_by_PID_Age <- TARA_TRB_long_fixed %>%
+seu_TRB_summary_by_PID_Age <- seu_TRB_long_fixed %>%
   group_by(Edit_Distance, PID, Age, Epitope_Target) %>%
   summarise(Total_Clonal_Frequency = sum(clonalFrequency, na.rm = TRUE), .groups = "drop") %>%
   arrange(Edit_Distance, PID, Age, desc(Total_Clonal_Frequency))
 
 # View the table
-write_csv(TARA_TRB_summary_by_PID_Age,'Trex_TARA_Epitope_Specificity_By_Sample.csv')
+write_csv(seu_TRB_summary_by_PID_Age,'Trex_TARA_Epitope_Specificity_By_Sample.csv')
 
 ### Pie charts #######
 setwd('~/Documents/CD8_Longitudinal/VDJ/TCR/Trex/PID_Pie_Chart')
 
-species_pie_data_full <- TARA_TRB_long_species %>%
+species_pie_data_full <- seu_TRB_long_species %>%
   group_by(PID, Age, Edit_Distance, Epitope_Species) %>%
   summarise(Total_Clonal_Frequency = sum(clonalFrequency, na.rm = TRUE), .groups = "drop")
 
@@ -1286,7 +936,7 @@ for (pid_to_plot in pid_list) {
 
 ####################################### Viral Load ####################################################
 
-TARA_clonal_expansion_summary <- TARA_TRB_combined %>%
+TARA_clonal_expansion_summary <- seu_TRB_combined %>%
   group_by(PID, Age) %>%
   summarise(
     Viral_Load = unique(Viral_Load),  # One per timepoint assumed
@@ -1366,7 +1016,7 @@ ggplot(TARA_clonal_expansion_summary_2, aes(x = Age, y = TARA_Expanded_Clone_Cou
 
 #### Save TCR Combined Seurat ####
 
-save(TARA_ALL, TARA_ALL_TRB_0, TARA_ALL_TRB_1, TARA_ALL_TRB_2,
+save(TARA_ALL, seu_TRB_0, seu_TRB_1, seu_TRB_2,
      file = "/home/akshay-iyer/Documents/CD8_Longitudinal/TARA_TCR_Combined.RData")
 
 save(EARTH, EARTH_TRB_0, EARTH_TRB_1, EARTH_TRB_2,
