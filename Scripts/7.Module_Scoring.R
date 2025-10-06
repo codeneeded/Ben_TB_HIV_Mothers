@@ -1,11 +1,12 @@
-suppressPackageStartupMessages({
-  library(Seurat)
-  library(ggplot2)
-  library(ggpubr)
-  library(dplyr)
-  library(readr)
-})
 
+library(Seurat)
+library(ggplot2)
+library(ggpubr)
+library(dplyr)
+library(readr)
+library(viridis)
+library(stringr)
+library(scales)
 # -----------------------------
 # Paths
 # -----------------------------
@@ -129,6 +130,7 @@ plot_module <- function(obj, module_field, folder, title) {
     geom_jitter(width = 0.2, size = 0.4, alpha = 0.3) +
     stat_compare_means(method = "wilcox.test", label = "p.format") +
     facet_wrap(as.formula(paste0("~", cluster_col)), scales = "free_y") +
+    scale_fill_manual(values = c("Positive" = "#FF918A","Negative" = "#A3F8A9")) + 
     theme_minimal(base_size = 14) +
     xlab("") + ylab("Module Score") +
     ggtitle(title)
@@ -148,6 +150,7 @@ pick_ref_levels <- function(vec) {
   if (length(lv) >= 2) return(lv[1:2])
   return(lv)
 }
+
 
 # Compute Wilcoxon p and HL shift per module x cluster
 module_stats <- list()
@@ -229,7 +232,6 @@ for (family in names(modules)) {
     }
   }
 }
-
 # -----------------------------
 # Outputs
 # -----------------------------
@@ -240,4 +242,75 @@ write_tsv(coverage, file.path(out_dir, "Module_Gene_Coverage.tsv"))
 stats_df <- dplyr::bind_rows(module_stats)
 stats_csv <- file.path(out_dir, "Module_Stats_byCluster.csv")
 readr::write_csv(stats_df, stats_csv)
+
+
+############# Overall Summary
+# -----------------------------
+# Summary Dotplot (Enhanced Color Sensitivity)
+# -----------------------------
+plot_module_summary <- function(stats_df, out_dir) {
+  suppressPackageStartupMessages({
+    library(ggplot2)
+    library(dplyr)
+    library(stringr)
+    library(scales)
+  })
+  
+  if (nrow(stats_df) == 0) return(invisible(NULL))
+  
+  # Preprocess
+  df <- stats_df %>%
+    filter(!is.na(PValue)) %>%
+    mutate(
+      Family = str_extract(Module, "^[^_]+"),
+      LogP = -log10(PValue),
+      HL_Shift_Capped = pmax(pmin(HL_Shift, 2), -2)
+    )
+  
+  df$Cluster <- factor(df$Cluster, levels = sort(unique(df$Cluster)))
+  df$Module  <- factor(df$Module, levels = rev(unique(df$Module)))
+  
+  # Color gradient: sharper transition near 0
+  diverge_fill <- scale_fill_gradientn(
+    colors = c("#1E8A0B", "#A3F8A9", "#FAF7F7", "#FF918A", "#BA2100"),
+    values = rescale(c(-2, -0.3, 0, 0.3, 2)),
+    limits = c(-2, 2),
+    name = "HL Shift\n(IGRA+ vs −)"
+  )
+  
+  families <- unique(df$Family)
+  for (fam in families) {
+    subdf <- df %>% filter(Family == fam)
+    n_mods <- length(unique(subdf$Module))
+    height <- max(6, min(20, n_mods * 0.5))
+    
+    p <- ggplot(subdf, aes(x = Cluster, y = Module)) +
+      geom_point(
+        aes(size = LogP, fill = HL_Shift_Capped),
+        shape = 21, color = "black", stroke = 0.3, alpha = 0.9
+      ) +
+      diverge_fill +
+      scale_size_continuous(range = c(2, 8), name = "-log10(p)") +
+      theme_minimal(base_size = 14) +
+      theme(
+        axis.text.x = element_text(angle = 45, hjust = 1),
+        panel.grid.minor = element_blank(),
+        panel.grid.major.x = element_blank(),
+        panel.border = element_blank(),
+        plot.title = element_text(face = "bold", size = 16)
+      ) +
+      ggtitle(paste0(fam, " Module Summary: IGRA+ vs IGRA−")) +
+      xlab("Cluster") + ylab("Module")
+    
+    ggsave(
+      file.path(out_dir, paste0("Module_Summary_", fam, ".png")),
+      p, width = 14, height = height, dpi = 300, bg = "white"
+    )
+    message("✅ Saved: ", file.path(out_dir, paste0("Module_Summary_", fam, ".png")))
+  }
+}
+
+
+
+plot_module_summary(stats_df, out_dir)
 
