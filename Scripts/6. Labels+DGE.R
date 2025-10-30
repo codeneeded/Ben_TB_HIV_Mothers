@@ -87,6 +87,7 @@ p <- DimPlot2(
   label.color = "black", pt.size = 1
 ) + ggtitle("Annotated Plot")
 
+p
 # Save
 ggsave(
   filename = out_path,
@@ -125,9 +126,10 @@ p3 <- ClusterDistrBar(
   origin     = seu$IGRA_status,
   cluster    = seu$IGRA_Annotation,
   rev        = TRUE,
-  normalize  = TRUE
+  normalize  = TRUE,
+  cols=c('#A3F8A9','#FF918A')
 )
-
+p3
 ggsave(
   filename = file.path(annotation_dir, "ClusterDistribution_IGRA_PosVsNeg.png"),
   plot = p3, width = 10, height = 6, dpi = 300

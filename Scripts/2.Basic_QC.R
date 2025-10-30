@@ -389,14 +389,42 @@ filtered_parse@meta.data %>%
 dev.off()
 
 # Cells per IGRA group after filtering
-png(file.path(qc_final_dir, "Cells_per_IGRA_PostQC.png"), width = 1200, height = 1000)
+png(file.path(qc_final_dir, "Cells_per_IGRA_PostQC.png"), width = 1000, height = 700)
 filtered_parse@meta.data %>%
   ggplot(aes(x = IGRA_status, fill = IGRA_status)) +
-  geom_bar() +
-  theme_classic() +
-  ggtitle("Number of Cells per IGRA Group (Post-QC)")
+  geom_bar(width = 0.6, color = "black", alpha = 0.9) +
+  scale_fill_manual(
+    values = c("Negative" = "#A3F8A9", "Positive" = "#FF918A"),
+    labels = c("Negative" = "IGRA Negative", "Positive" = "IGRA Positive"),
+    name = "IGRA Status"
+  ) +
+  geom_text(
+    stat = "count",
+    aes(label = scales::comma(..count..)),
+    vjust = -0.5,
+    size = 6
+  ) +
+  labs(
+    title = "Number of Cells per IGRA Group (Post-QC)",
+    x = "IGRA Status",
+    y = "Cell Count"
+  ) +
+  theme_classic(base_size = 18) +
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold"),
+    legend.position = "top",
+    axis.text = element_text(size = 16, color = "black"),
+    axis.title = element_text(size = 18),
+    legend.text = element_text(size = 16),
+    legend.title = element_text(size = 18, face = "bold")
+  ) +
+  ylim(0, NA)  # ensures text labels fit above bars
 dev.off()
 
+##############
+
+
+##############
 png(file.path(qc_final_dir, "PostQC_Features_Grouped.png"), width = 1800, height = 1200)
 VlnPlot(filtered_parse, group.by = "orig.ident", features = feats_parse, pt.size = 0.1, ncol = 2) +
   NoLegend()
