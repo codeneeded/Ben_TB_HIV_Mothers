@@ -1,0 +1,45 @@
+Module,Module_Pretty,Family,Submodule,Present,Missing,Present_Genes,Missing_Genes,Module_Reviewer
+TGFb_TGFB_TGFBR_module,TGFb : TGFB–TGFBR module,TGFb,TGFB–TGFBR module,8,0,ACVRL1;ENG;TGFB1;TGFB2;TGFB3;TGFBR1;TGFBR2;TGFBR3,,TGFb TGFB TGFBR module
+TGFb_SMAD2_3_SMAD4_module,TGFb : SMAD2/3–SMAD4 module,TGFb,SMAD2/3–SMAD4 module,7,0,PMEPA1;SKI;SKIL;SMAD2;SMAD3;SMAD4;SMAD7,,TGFb SMAD2 3 SMAD4 module
+TGFb_TGF_transcriptional_targets,TGFb : TGFβ transcriptional targets,TGFb,TGFβ transcriptional targets,11,0,CCR7;COL1A1;COL3A1;CTLA4;FOXP3;IKZF2;ITGAE;LRRC32;PTPN14;SELL;SERPINE1,,TGFb TGF transcriptional targets
+TGFb_TGF_noncanonical_MAPK_PI3K,TGFb : TGFβ noncanonical (MAPK/PI3K),TGFb,TGFβ noncanonical (MAPK/PI3K),12,0,AKT1;FOS;JUN;MAP3K7;MAPK14;MAPK8;MAPK9;MTOR;NFKBIA;PIK3CD;RELB;RPTOR,,TGFb TGF noncanonical MAPK PI3K
+IL10_STAT3_IL10RA_IL10RB_JAK1_TYK2_STAT3_module,IL10_STAT3 : IL10RA/IL10RB–JAK1/TYK2–STAT3 module,IL10_STAT3,IL10RA/IL10RB–JAK1/TYK2–STAT3 module,3,0,IL10RA;IL10RB;STAT3,,IL10 STAT3 IL10RA IL10RB JAK1 TYK2 STAT3 module
+IL10_STAT3_STAT3_Tfh_linked_targets,IL10_STAT3 : STAT3-Tfh-linked targets,IL10_STAT3,STAT3-Tfh-linked targets,4,0,BATF;BCL6;MAF;PIM1,,IL10 STAT3 STAT3 Tfh linked targets
+IL10_STAT3_STAT3_regulatory_Treg_overlap,IL10_STAT3 : STAT3-regulatory/Treg-overlap,IL10_STAT3,STAT3-regulatory/Treg-overlap,3,0,CTLA4;FOXP3;IKZF2,,IL10 STAT3 STAT3 regulatory Treg overlap
+IL10_STAT3_Alternative_activation_M2_like_signature,IL10_STAT3 : Alternative-activation (M2-like) signature,IL10_STAT3,Alternative-activation (M2-like) signature,3,0,CD163;MRC1;MSR1,,IL10 STAT3 Alternative activation M2 like signature
+Reservoir_CD4_Tfh_Core,Reservoir_CD4 : Tfh_Core,Reservoir_CD4,Tfh_Core,8,0,BCL6;BATF;CXCR5;ICOS;IL21;MAF;PDCD1;SH2D1A,,Reservoir CD4 Tfh Core
+Reservoir_CD4_Tph_Discriminator,Reservoir_CD4 : Tph_Discriminator,Reservoir_CD4,Tph_Discriminator,5,0,CCR2;CXCL13;ICOS;PDCD1;PRDM1,,Reservoir CD4 Tph Discriminator
+Reservoir_CD4_Reservoir_Memory,Reservoir_CD4 : Reservoir_Memory,Reservoir_CD4,Reservoir_Memory,5,0,BCL2;CCR7;IL7R;SELL;TCF7,,Reservoir CD4 Reservoir Memory
+ISG_TypeI,ISG : TypeI,ISG,TypeI,18,0,APOBEC3G;BST2;IFI44L;IFI6;IFIT1;IFIT3;IFITM1;IFITM2;IFITM3;ISG15;MX1;MX2;OAS1;OAS2;OAS3;RSAD2;SAMHD1;TRIM5,,ISG TypeI
+ISG_TypeII,ISG : TypeII,ISG,TypeII,21,0,CIITA;CXCL10;CXCL11;GBP1;GBP2;GBP3;GBP4;GBP5;GBP6;HLA-DPA1;HLA-DPB1;HLA-DRA;HLA-DRB1;IRF1;IRF8;PSMB8;PSMB9;SOCS1;STAT1;TAP1;TAP2,,ISG TypeII
+Myeloid_Inflammatory,Myeloid : Inflammatory,Myeloid,Inflammatory,9,0,CCL2;CXCL8;IL1B;NFKBIA;NFKBIZ;S100A8;S100A9;SERPINA1;TNF,,Myeloid Inflammatory
+Myeloid_Regulatory,Myeloid : Regulatory,Myeloid,Regulatory,10,0,CD163;IL10RA;IL10RB;MRC1;MSR1;SOCS3;STAT3;TGFB1;TGFBR1;TGFBR2,,Myeloid Regulatory
+Myeloid_DC_Maturation,Myeloid : DC_Maturation,Myeloid,DC_Maturation,6,0,CCL19;CD40;CCR7;FSCN1;LAMP3;RELB,,Myeloid DC Maturation
+NK_Inhibition,NK : Inhibition,NK,Inhibition,2,0,KLRC1;KLRD1,,NK Inhibition
+NK_Effector,NK : Effector,NK,Effector,4,0,GNLY;GZMK;NKG7;PRF1,,NK Effector
+NK_Activation,NK : Activation,NK,Activation,4,0,CCL5;IFNG;XCL1;XCL2,,NK Activation
+CD8_Effector,CD8 : Effector,CD8,Effector,7,0,CCL5;GNLY;IFNG;NKG7;PRF1;XCL1;XCL2,,CD8 Effector
+CD8_Memory,CD8 : Memory,CD8,Memory,5,0,BCL2;CCR7;IL7R;SELL;TCF7,,CD8 Memory
+CD8_Exhaustion,CD8 : Exhaustion,CD8,Exhaustion,6,0,EOMES;HAVCR2;LAG3;PDCD1;TIGIT;TOX,,CD8 Exhaustion
+Bcell_GC_like,Bcell : GC_like,Bcell,GC_like,7,0,AICDA;BACH2;BCL6;CXCR5;MEF2B;RGS13;S1PR2,,Bcell GC like
+Bcell_Atypical_ABC,Bcell : Atypical_ABC,Bcell,Atypical_ABC,4,0,FCRL5;ITGAX;TBX21;ZEB2,,Bcell Atypical ABC
+Bcell_Plasmablast,Bcell : Plasmablast,Bcell,Plasmablast,6,0,JCHAIN;MZB1;PRDM1;SDC1;TNFRSF17;XBP1,,Bcell Plasmablast
+Autophagy_Initiation,Autophagy : Initiation,Autophagy,Initiation,12,0,ATG101;ATG13;ATG14;ATG2A;ATG2B;BECN1;PIK3C3;PIK3R4;RB1CC1;ULK1;WIPI1;WIPI2,,Autophagy Initiation
+Autophagy_Conjugation,Autophagy : Conjugation,Autophagy,Conjugation,11,0,ATG12;ATG16L1;ATG3;ATG5;ATG7;GABARAP;GABARAPL1;GABARAPL2;MAP1LC3A;MAP1LC3B;MAP1LC3B2,,Autophagy Conjugation
+Autophagy_Fusion,Autophagy : Fusion,Autophagy,Fusion,5,0,EPG5;RAB7A;SNAP29;STX17;VAMP8,,Autophagy Fusion
+Autophagy_Lysosome,Autophagy : Lysosome,Autophagy,Lysosome,9,0,ATP6V0D1;ATP6V1A;ATP6V1B2;CTSB;CTSD;LAMP1;LAMP2;MCOLN1;PSAP,,Autophagy Lysosome
+Autophagy_CLEAR_TFs,Autophagy : CLEAR_TFs,Autophagy,CLEAR_TFs,3,0,MITF;TFE3;TFEB,,Autophagy CLEAR TFs
+Autophagy_Cargo,Autophagy : Cargo,Autophagy,Cargo,6,0,CALCOCO2;NBR1;OPTN;SQSTM1;TAX1BP1;TOLLIP,,Autophagy Cargo
+Autophagy_Mitophagy,Autophagy : Mitophagy,Autophagy,Mitophagy,8,0,BCL2L13;BNIP3;BNIP3L;FKBP8;FUNDC1;PHB2;PINK1;PRKN,,Autophagy Mitophagy
+Autophagy_Xenophagy,Autophagy : Xenophagy,Autophagy,Xenophagy,11,0,ATG16L1;ATG5;ATG7;CALCOCO2;LRSAM1;NOD2;OPTN;RIPK2;SQSTM1;TAX1BP1;TBK1,,Autophagy Xenophagy
+Autophagy_cGAS_STING,Autophagy : cGAS_STING,Autophagy,cGAS_STING,2,0,CGAS;STING1,,Autophagy cGAS STING
+Autophagy_mTORC,Autophagy : mTORC,Autophagy,mTORC,7,0,DEPDC5;MLST8;MTOR;RHEB;RPTOR;TSC1;TSC2,,Autophagy mTORC
+Autophagy_AMPK,Autophagy : AMPK,Autophagy,AMPK,5,0,PRKAA1;PRKAA2;PRKAB1;PRKAG1;STK11,,Autophagy AMPK
+NFkB_activity,NF-κB activity,NFkB_activity,NA,24,0,BCL2A1;BIRC2;BIRC3;CCL2;CCL3;CCL4;CCL5;CXCL8;ICAM1;IL1B;IL6;NFKB1;NFKBIA;NOD2;PTGS2;RELA;RELB;SELE;TNF;TNFAIP2;TNFAIP3;TRAF1;TRAF2;VCAM1,,NF-κB activity
+STAT_reactivation_axis,STAT reactivation axis,STAT_reactivation_axis,NA,21,0,CD40LG;CISH;CXCL10;CXCL9;ICOS;IFNGR1;IFNGR2;IL6R;IL6ST;IRF1;JAK1;JAK2;OSMR;PIM1;SOCS1;SOCS3;STAT1;STAT3;STAT5A;STAT5B;TYK2,,STAT reactivation axis
+MYC_targets,MYC targets,MYC_targets,NA,20,0,CDK4;E2F1;EIF4A1;EIF4E;EIF5A;HSP90AA1;HSPD1;LDHA;MAX;MYC;NCL;NPM1;ODC1;PABPC1;PCNA;RPL11;RPLP0;RPS6;SLC2A1;SRSF1,,MYC targets
+Cell_cycle_E2F_G2M,Cell-cycle/E2F/G2M,Cell_cycle_E2F_G2M,NA,23,0,AURKA;AURKB;BUB1;BUB1B;CCNA2;CCNB1;CCNB2;CDC20;CDC25A;CDC25C;CDK1;CDK2;MCM2;MCM3;MCM4;MCM5;MCM6;MCM7;MKI67;PCNA;PLK1;TK1;TOP2A,,Cell-cycle/E2F/G2M
+Glycolysis,Glycolysis,Glycolysis,NA,17,0,ALDOA;ENO1;GAPDH;GPI;HK2;LDHA;LDHB;PDK1;PDK3;PFKFB3;PFKP;PGAM1;PGK1;PKM;SLC2A1;SLC2A3;TPI1,,Glycolysis
+OXPHOS,Oxidative phosphorylation,OXPHOS,NA,17,0,ATP5F1A;ATP5F1B;ATP5MC1;ATP5PF;COX4I1;COX5B;COX6C;CYC1;NDUFA5;NDUFA9;NDUFB8;NDUFS1;SDHB;SDHC;UQCRC1;UQCRC2;UQCRQ,,Oxidative phosphorylation
+Apoptosis,Apoptosis,Apoptosis,NA,12,0,BCL2;BCL2A1;BCL2L1;BCL2L2;BIRC2;BIRC3;CFLAR;MCL1;MDM2;TRAF1;TRAF2;XIAP,,Apoptosis
+Chromatin_repression,Chromatin repression,Chromatin_repression,NA,20,0,CHD4;DNMT1;DNMT3A;DNMT3B;EED;EZH2;GATAD2A;HDAC1;HDAC2;KDM1A;MBD2;MTA1;MTA2;NCOR1;NCOR2;RCOR1;SETDB1;SIN3A;SIN3B;SUZ12,,Chromatin repression

@@ -7,6 +7,7 @@ library(readr)
 library(viridis)
 library(stringr)
 library(scales)
+library(tidyr)
 
 # -----------------------------
 # Paths
@@ -30,81 +31,114 @@ group_col   <- "IGRA_status"
 # -----------------------------
 # Module definitions (line by line, grouped in families)
 # -----------------------------
-
 modules <- list(
   
   # ---- TGF-beta ----
   TGFb = list(
-    ReceptorsLigands = c("TGFB1","TGFB2","TGFB3","TGFBR1","TGFBR2","TGFBR3","ENG","ACVRL1"),
-    SMAD_Core        = c("SMAD2","SMAD3","SMAD4","SMAD7","SKI","SKIL","PMEPA1"),
-    Downstream       = c("FOXP3","IKZF2","CTLA4","LRRC32","ITGAE","CCR7","SELL","SERPINE1","SERPINE1","PTPN14","COL1A1","COL3A1"),
-    Noncanonical     = c("MAPK14","MAPK8","MAPK9","MAP3K7","FOS","JUN","PIK3CD","AKT1","MTOR","RPTOR","NFKBIA","RELB")
+    "TGFB–TGFBR module"               = c("ACVRL1","ENG","TGFB1","TGFB2","TGFB3","TGFBR1","TGFBR2","TGFBR3"),
+    "SMAD2/3–SMAD4 module"            = c("PMEPA1","SKI","SKIL","SMAD2","SMAD3","SMAD4","SMAD7"),
+    "TGFβ transcriptional targets"    = c("CCR7","COL1A1","COL3A1","CTLA4","FOXP3","IKZF2","ITGAE","LRRC32","PTPN14","SELL","SERPINE1"),
+    "TGFβ noncanonical (MAPK/PI3K)"   = c("AKT1","FOS","JUN","MAP3K7","MAPK14","MAPK8","MAPK9","MTOR","NFKBIA","PIK3CD","RELB","RPTOR")
   ),
   
   # ---- IL-10 / STAT3 ----
   IL10_STAT3 = list(
-    ReceptorsTransducers = c("IL10RA","IL10RB","STAT3"),
-    TFH_Adjacent_TFs     = c("BCL6","MAF","BATF","PIM1"),
-    Treg_Overlap         = c("FOXP3","CTLA4","IKZF2"),
-    Myeloid_M2_Hue       = c("MRC1","MSR1","CD163")
+    "IL10RA/IL10RB–JAK1/TYK2–STAT3 module" = c("IL10RA","IL10RB","STAT3"),
+    "STAT3-Tfh-linked targets"             = c("BATF","BCL6","MAF","PIM1"),
+    "STAT3-regulatory/Treg-overlap"        = c("CTLA4","FOXP3","IKZF2"),
+    "Alternative-activation (M2-like) signature" = c("CD163","MRC1","MSR1")
   ),
   
   # ---- Reservoir CD4 ----
   Reservoir_CD4 = list(
-    Tfh_Core         = c("CXCR5","PDCD1","ICOS","BCL6","MAF","BATF","SH2D1A","IL21"),
-    Tph_Discriminator= c("PRDM1","CXCL13","CCR2","PDCD1","ICOS"),
-    Reservoir_Memory = c("TCF7","CCR7","SELL","BCL2","IL7R")
+    Tfh_Core          = c("BCL6","BATF","CXCR5","ICOS","IL21","MAF","PDCD1","SH2D1A"),
+    Tph_Discriminator = c("CCR2","CXCL13","ICOS","PDCD1","PRDM1"),
+    Reservoir_Memory  = c("BCL2","CCR7","IL7R","SELL","TCF7")
   ),
   
   # ---- ISG ----
   ISG = list(
-    TypeI  = c("ISG15","IFI6","IFI44L","IFIT1","IFIT3","MX1","MX2","OAS1","OAS2","OAS3","RSAD2",
-               "IFITM1","IFITM2","IFITM3","BST2","TRIM5","APOBEC3G","SAMHD1"),
-    TypeII = c("STAT1","IRF1","GBP1","GBP5","CXCL9","CXCL10")
+    TypeI  = c("APOBEC3G","BST2","IFI44L","IFI6","IFIT1","IFIT3","IFITM1","IFITM2","IFITM3",
+               "ISG15","MX1","MX2","OAS1","OAS2","OAS3","RSAD2","SAMHD1","TRIM5"),
+    TypeII = c("CIITA","CXCL10","CXCL11","GBP1","GBP2","GBP3","GBP4","GBP5","GBP6","HLA-DPA1",
+               "HLA-DPB1","HLA-DRA","HLA-DRB1","IRF1","IRF8","PSMB8","PSMB9","SOCS1","STAT1","TAP1","TAP2")
   ),
   
   # ---- Myeloid ----
   Myeloid = list(
-    Inflammatory  = c("IL1B","TNF","NFKBIA","NFKBIZ","CCL2","CXCL8","SERPINA1","S100A8","S100A9"),
-    Regulatory    = c("IL10RA","IL10RB","STAT3","SOCS3","TGFB1","TGFBR1","TGFBR2","MRC1","MSR1","CD163"),
-    DC_Maturation = c("CCR7","LAMP3","FSCN1","CCL19","CD40","RELB")
+    Inflammatory  = c("CCL2","CXCL8","IL1B","NFKBIA","NFKBIZ","S100A8","S100A9","SERPINA1","TNF"),
+    Regulatory    = c("CD163","IL10RA","IL10RB","MRC1","MSR1","SOCS3","STAT3","TGFB1","TGFBR1","TGFBR2"),
+    DC_Maturation = c("CCL19","CD40","CCR7","FSCN1","LAMP3","RELB")
   ),
   
   # ---- NK ----
   NK = list(
     Inhibition  = c("KLRC1","KLRD1"),
-    Effector    = c("PRF1","GNLY","NKG7","GZMK"),
-    Activation  = c("IFNG","XCL1","XCL2","CCL5")
+    Effector    = c("GNLY","GZMK","NKG7","PRF1"),
+    Activation  = c("CCL5","IFNG","XCL1","XCL2")
   ),
   
   # ---- CD8 ----
   CD8 = list(
-    Effector    = c("PRF1","GNLY","NKG7","CCL5","XCL1","XCL2","IFNG"),
-    Memory      = c("TCF7","CCR7","SELL","BCL2","IL7R"),
-    Exhaustion  = c("PDCD1","TIGIT","LAG3","HAVCR2","TOX","EOMES")
+    Effector    = c("CCL5","GNLY","IFNG","NKG7","PRF1","XCL1","XCL2"),
+    Memory      = c("BCL2","CCR7","IL7R","SELL","TCF7"),
+    Exhaustion  = c("EOMES","HAVCR2","LAG3","PDCD1","TIGIT","TOX")
   ),
   
   # ---- B cells ----
   Bcell = list(
-    GC_like     = c("BCL6","CXCR5","AICDA","S1PR2","RGS13","MEF2B","BACH2"),
-    Atypical_ABC= c("TBX21","ITGAX","FCRL5","ZEB2"),
-    Plasmablast = c("PRDM1","XBP1","JCHAIN","MZB1","SDC1","TNFRSF17")
+    GC_like      = c("AICDA","BACH2","BCL6","CXCR5","MEF2B","RGS13","S1PR2"),
+    Atypical_ABC = c("FCRL5","ITGAX","TBX21","ZEB2"),
+    Plasmablast  = c("JCHAIN","MZB1","PRDM1","SDC1","TNFRSF17","XBP1")
   ),
   
   # ---- Autophagy ----
   Autophagy = list(
-    Initiation   = c("ULK1","RB1CC1","ATG13","ATG101","BECN1","PIK3C3","PIK3R4","ATG14","WIPI1","WIPI2","ATG2A","ATG2B"),
-    Conjugation  = c("ATG5","ATG12","ATG16L1","ATG7","ATG3","MAP1LC3A","MAP1LC3B","MAP1LC3B2","GABARAP","GABARAPL1","GABARAPL2"),
-    Fusion       = c("RAB7A","STX17","SNAP29","VAMP8","EPG5"),
-    Lysosome     = c("LAMP1","LAMP2","CTSD","CTSB","ATP6V1A","ATP6V1B2","ATP6V0D1","PSAP","MCOLN1"),
-    CLEAR_TFs    = c("TFEB","TFE3","MITF"),
-    Cargo        = c("SQSTM1","NBR1","OPTN","CALCOCO2","TAX1BP1","TOLLIP"),
-    Mitophagy    = c("PINK1","PRKN","BNIP3","BNIP3L","FUNDC1","PHB2","FKBP8","BCL2L13"),
-    Xenophagy    = c("NOD2","RIPK2","TBK1","OPTN","CALCOCO2","SQSTM1","TAX1BP1","LRSAM1","ATG16L1","ATG5","ATG7"),
-    cGAS_STING   = c("STING1","CGAS"),
-    mTORC        = c("MTOR","RPTOR","MLST8","RHEB","TSC1","TSC2","DEPDC5"),
+    Initiation   = c("ATG101","ATG13","ATG14","ATG2A","ATG2B","BECN1","PIK3C3","PIK3R4","RB1CC1","ULK1","WIPI1","WIPI2"),
+    Conjugation  = c("ATG12","ATG16L1","ATG3","ATG5","ATG7","GABARAP","GABARAPL1","GABARAPL2",
+                     "MAP1LC3A","MAP1LC3B","MAP1LC3B2"),
+    Fusion       = c("EPG5","RAB7A","SNAP29","STX17","VAMP8"),
+    Lysosome     = c("ATP6V0D1","ATP6V1A","ATP6V1B2","CTSB","CTSD","LAMP1","LAMP2","MCOLN1","PSAP"),
+    CLEAR_TFs    = c("MITF","TFE3","TFEB"),
+    Cargo        = c("CALCOCO2","NBR1","OPTN","SQSTM1","TAX1BP1","TOLLIP"),
+    Mitophagy    = c("BCL2L13","BNIP3","BNIP3L","FKBP8","FUNDC1","PHB2","PINK1","PRKN"),
+    Xenophagy    = c("ATG16L1","ATG5","ATG7","CALCOCO2","LRSAM1","NOD2","OPTN","RIPK2","SQSTM1","TAX1BP1","TBK1"),
+    cGAS_STING   = c("CGAS","STING1"),
+    mTORC        = c("DEPDC5","MLST8","MTOR","RHEB","RPTOR","TSC1","TSC2"),
     AMPK         = c("PRKAA1","PRKAA2","PRKAB1","PRKAG1","STK11")
-  )
+  ),
+  
+  # ---- NF-kB activity ----
+  NFkB_activity = sort(c("BCL2A1","BIRC2","BIRC3","CCL2","CCL3","CCL4","CCL5","CXCL8","ICAM1",
+                         "IL1B","IL6","NFKB1","NFKBIA","PTGS2","RELA","RELB","SELE","TNF","TNFAIP2",
+                         "TNFAIP3","TRAF1","TRAF2","VCAM1","NOD2")),
+  
+  # ---- STAT reactivation axis ----
+  STAT_reactivation_axis = sort(c("CD40LG","CISH","CXCL9","CXCL10","IFNGR1","IFNGR2","IL6R","IL6ST","IRF1",
+                                  "ICOS","JAK1","JAK2","OSMR","PIM1","SOCS1","SOCS3","STAT1","STAT3","STAT5A","STAT5B","TYK2")),
+  
+  # ---- MYC targets ----
+  MYC_targets = sort(c("CDK4","E2F1","EIF4A1","EIF4E","EIF5A","HSPD1","HSP90AA1","LDHA","MAX","MYC",
+                       "NCL","NPM1","PABPC1","PCNA","RPL11","RPLP0","RPS6","SLC2A1","SRSF1","ODC1")),
+  
+  # ---- Cell-cycle / E2F / G2M ----
+  Cell_cycle_E2F_G2M = sort(c("AURKA","AURKB","BUB1","BUB1B","CCNA2","CCNB1","CCNB2","CDC20","CDC25A","CDC25C",
+                              "CDK1","CDK2","MCM2","MCM3","MCM4","MCM5","MCM6","MCM7","MKI67","PCNA","PLK1","TK1","TOP2A")),
+  
+  # ---- Glycolysis ----
+  Glycolysis = sort(c("ALDOA","ENO1","GAPDH","GPI","HK2","LDHA","LDHB","PDK1","PDK3","PFKFB3","PFKP","PGAM1",
+                      "PGK1","PKM","SLC2A1","SLC2A3","TPI1")),
+  
+  # ---- Oxidative phosphorylation ----
+  OXPHOS = sort(c("ATP5F1A","ATP5F1B","ATP5MC1","ATP5PF","COX4I1","COX5B","COX6C","CYC1","NDUFA5","NDUFA9",
+                  "NDUFB8","NDUFS1","SDHB","SDHC","UQCRC1","UQCRC2","UQCRQ")),
+  
+  # ---- Apoptosis ----
+  Apoptosis = sort(c("BCL2","BCL2A1","BCL2L1","BCL2L2","BIRC2","BIRC3","CFLAR","MDM2","MCL1","TRAF1","TRAF2","XIAP")),
+  
+  # ---- Chromatin repression/silencing ----
+  Chromatin_repression = sort(c("CHD4","DNMT1","DNMT3A","DNMT3B","EED","EZH2","GATAD2A","HDAC1","HDAC2",
+                                "KDM1A","MBD2","MTA1","MTA2","NCOR1","NCOR2","RCOR1","SETDB1","SIN3A","SIN3B","SUZ12"))
 )
 
 # -----------------------------
@@ -123,34 +157,85 @@ score_module <- function(obj, genes, name) {
   return(obj)
 }
 
+# -------- Safe IDs (ASCII-only) for column names --------
+safe_id <- function(x) {
+  y <- iconv(x, to = "ASCII//TRANSLIT")           # turn “β” → "b", etc.
+  y <- gsub("[^A-Za-z0-9]+", "_", y, perl = TRUE) # non-alnum → "_"
+  y <- gsub("_+", "_", y)
+  y <- sub("^_", "", y); y <- sub("_$", "", y)
+  y
+}
+
+# Build a safe Seurat meta field name from family + submodule (pretty)
+module_field_name <- function(family, sub_pretty) {
+  paste0("MS_", paste(family, safe_id(sub_pretty), sep = "_"))
+}
+
+# -------- Pretty display names (unchanged) --------
+pretty_module_name <- function(mod_name) {
+  x <- mod_name
+  x <- gsub("_", " ", x, fixed = TRUE)
+  x <- gsub("\\bNFkB\\b", "NF-κB", x)
+  x <- gsub("\\bOXPHOS\\b", "Oxidative phosphorylation", x)
+  x <- gsub("\\bSTAT reactivation axis\\b", "STAT reactivation axis", x)
+  x <- gsub("\\bCell cycle E2F G2M\\b", "Cell-cycle/E2F/G2M", x)
+  x
+}
+
+# -------- Fixed: safe filenames (no “invalid range” error) --------
+safe_filename <- function(label) {
+  x <- iconv(label, to = "ASCII//TRANSLIT")
+  x <- gsub("[/\\\\]", "-", x)
+  x <- gsub("[^A-Za-z0-9_. -]", "", x, perl = TRUE)  # put "-" at end of [] or use perl
+  x <- gsub("\\s+", "_", x)
+  x
+}
+
+
 plot_module <- function(obj, module_field, folder, title) {
   md <- obj@meta.data
-  md <- md[!is.na(md[[group_col]]) & !is.na(md[[cluster_col]]), ]
   
-  if (all(c("Negative", "Positive") %in% unique(md[[group_col]]))) {
-    md[[group_col]] <- factor(md[[group_col]], levels = c("Negative", "Positive"))
+  # filter valid rows
+  keep <- !is.na(md[[group_col]]) & !is.na(md[[cluster_col]]) & !is.na(md[[module_field]])
+  md <- md[keep, , drop = FALSE]
+  if (nrow(md) == 0) return(invisible(NULL))
+  
+  # build a safe DF with standard column names to avoid parse() on weird names
+  df <- data.frame(
+    .group   = md[[group_col]],
+    .cluster = md[[cluster_col]],
+    .score   = md[[module_field]],
+    stringsAsFactors = FALSE
+  )
+  
+  # force order if exactly these levels exist
+  if (all(c("Negative", "Positive") %in% unique(df$.group))) {
+    df$.group <- factor(df$.group, levels = c("Negative", "Positive"))
   }
   
-  gg <- ggplot(md, aes_string(x = group_col, y = module_field, fill = group_col)) +
+  pretty_title <- pretty_module_name(title)
+  file_stub    <- safe_filename(pretty_module_name(module_field))
+  
+  gg <- ggplot(df, aes(x = .group, y = .score, fill = .group)) +
     geom_boxplot(width = 0.7, outlier.shape = NA, alpha = 0.9, color = "black") +
     geom_jitter(width = 0.18, size = 0.4, alpha = 0.25) +
-    stat_compare_means(
+    ggpubr::stat_compare_means(
       method = "wilcox.test",
       label = "p.signif",
       hide.ns = TRUE,
       label.x.npc = "center",
-      label.y.npc = 0.9,      # lowered from the facet strip
+      label.y.npc = 0.9,
       size = 7,
-      color = "red"           # red significance stars
+      color = "red"
     ) +
-    facet_wrap(stats::as.formula(paste0("~", cluster_col)), scales = "free_y") +
+    facet_wrap(~ .cluster, scales = "free_y") +
     scale_fill_manual(
       values = c("Positive" = "#FF918A", "Negative" = "#A3F8A9"),
       labels = c("Negative" = "IGRA Negative", "Positive" = "IGRA Positive"),
       name   = "IGRA Status"
     ) +
     labs(
-      title = title,
+      title = pretty_title,
       x = "IGRA Status",
       y = "Module Score"
     ) +
@@ -166,7 +251,7 @@ plot_module <- function(obj, module_field, folder, title) {
     )
   
   ggsave(
-    filename = file.path(folder, paste0(module_field, ".png")),
+    filename = file.path(folder, paste0(file_stub, ".png")),
     plot = gg, width = 20, height = 18, dpi = 300, bg = "white"
   )
 }
@@ -185,82 +270,197 @@ pick_ref_levels <- function(vec) {
   return(lv)
 }
 
-
+# -----------------------------
 # Compute Wilcoxon p and HL shift per module x cluster
+# -----------------------------
 module_stats <- list()
-
 coverage <- data.frame()
 
 for (family in names(modules)) {
-  family_dir <- file.path(out_dir, family)
-  dir.create(family_dir, showWarnings = FALSE)
-  for (sub in names(modules[[family]])) {
-    mod_name <- paste(family, sub, sep="_")
-    field <- paste0("MS_", mod_name)
-    seu <- score_module(seu, modules[[family]][[sub]], mod_name)
-    plot_module(seu, field, family_dir, paste(family, "-", sub))
+  family_dir <- file.path(out_dir, safe_id(family))
+  dir.create(family_dir, showWarnings = FALSE, recursive = TRUE)
+  
+  el <- modules[[family]]
+  
+  # ---------- CASE A: family is a single flat module (character vector) ----------
+  if (is.character(el)) {
+    genes <- el
+    # Use a safe field based only on the family name (avoid duplication family_family)
+    field     <- paste0("MS_", safe_id(family))
+    mod_id    <- sub("^MS_", "", field)
+    mod_pretty<- pretty_module_name(family)
+    # Title for flat modules = just the module pretty name
+    mod_label <- mod_pretty
     
-    present <- intersect(modules[[family]][[sub]], rownames(seu))
-    missing <- setdiff(modules[[family]][[sub]], present)
-    coverage <- rbind(coverage,
-                      data.frame(Module=mod_name, Present=length(present), Missing=length(missing),
-                                 Present_Genes=paste(present, collapse=";"),
-                                 Missing_Genes=paste(missing, collapse=";"))
+    # score + plot
+    seu <- score_module(seu, genes, mod_id)
+    plot_module(seu, field, family_dir, mod_label)
+    
+    # coverage
+    present <- intersect(genes, rownames(seu))
+    missing <- setdiff(genes, rownames(seu))
+    coverage <- rbind(
+      coverage,
+      data.frame(
+        Module         = mod_id,
+        Module_Pretty  = mod_pretty,
+        Family         = family,
+        Submodule      = NA_character_,
+        Present        = length(present),
+        Missing        = length(missing),
+        Present_Genes  = paste(present, collapse = ";"),
+        Missing_Genes  = paste(missing, collapse = ";"),
+        stringsAsFactors = FALSE
+      )
     )
     
-    # Collect stats per cluster
+    # stats per cluster
+    md <- seu@meta.data
+    if (field %in% colnames(md)) {
+      keep <- !is.na(md[[group_col]]) & !is.na(md[[cluster_col]]) & !is.na(md[[field]])
+      if (any(keep)) {
+        md2 <- md[keep, c(group_col, cluster_col, field), drop = FALSE]
+        for (cl in sort(unique(md2[[cluster_col]]))) {
+          subdf <- md2[md2[[cluster_col]] == cl, , drop = FALSE]
+          grps  <- unique(as.character(subdf[[group_col]]))
+          
+          if (length(grps) != 2 || nrow(subdf) < 6) {
+            module_stats[[length(module_stats) + 1]] <- data.frame(
+              Module = mod_id, Module_Pretty = mod_pretty, Cluster = cl,
+              PValue = NA_real_, HL_Shift = NA_real_, stringsAsFactors = FALSE
+            )
+            next
+          }
+          
+          ord <- pick_ref_levels(subdf[[group_col]])
+          if (length(ord) != 2) {
+            module_stats[[length(module_stats) + 1]] <- data.frame(
+              Module = mod_id, Module_Pretty = mod_pretty, Cluster = cl,
+              PValue = NA_real_, HL_Shift = NA_real_, stringsAsFactors = FALSE
+            )
+            next
+          }
+          
+          x <- subdf[subdf[[group_col]] == ord[1], field]
+          y <- subdf[subdf[[group_col]] == ord[2], field]
+          if (length(x) < 3 || length(y) < 3) {
+            module_stats[[length(module_stats) + 1]] <- data.frame(
+              Module = mod_id, Module_Pretty = mod_pretty, Cluster = cl,
+              PValue = NA_real_, HL_Shift = NA_real_, stringsAsFactors = FALSE
+            )
+            next
+          }
+          
+          wt <- tryCatch(wilcox.test(x, y, alternative = "two.sided", exact = FALSE, conf.int = TRUE),
+                         error = function(e) NULL)
+          if (is.null(wt)) {
+            module_stats[[length(module_stats) + 1]] <- data.frame(
+              Module = mod_id, Module_Pretty = mod_pretty, Cluster = cl,
+              PValue = NA_real_, HL_Shift = NA_real_, stringsAsFactors = FALSE
+            )
+          } else {
+            hl <- unname(if (!is.null(wt$estimate)) wt$estimate else median(x) - median(y))
+            module_stats[[length(module_stats) + 1]] <- data.frame(
+              Module = mod_id, Module_Pretty = mod_pretty, Cluster = cl,
+              PValue = wt$p.value, HL_Shift = hl, stringsAsFactors = FALSE
+            )
+          }
+        }
+      }
+    }
+    
+    next  # done with flat family; move to next family
+  }
+  
+  # ---------- CASE B: family is a list of submodules ----------
+  for (sub_pretty in names(el)) {
+    genes    <- el[[sub_pretty]]
+    
+    # Safe meta-data field name
+    field     <- module_field_name(family, sub_pretty)
+    mod_id    <- sub("^MS_", "", field)
+    mod_pretty<- paste(family, sub_pretty, sep = " : ")
+    
+    # Titles:
+    # show only submodule for TGFb, IL10_STAT3, Reservoir_CD4; otherwise "Family - Sub"
+    if (family %in% c("IL10_STAT3", "TGFb", "Reservoir_CD4")) {
+      mod_label <- sub_pretty
+    } else {
+      mod_label <- paste(family, "-", sub_pretty)
+    }
+    
+    # score + plot
+    seu <- score_module(seu, genes, mod_id)
+    plot_module(seu, field, family_dir, mod_label)
+    
+    # coverage
+    present <- intersect(genes, rownames(seu))
+    missing <- setdiff(genes, rownames(seu))
+    coverage <- rbind(
+      coverage,
+      data.frame(
+        Module         = mod_id,
+        Module_Pretty  = mod_pretty,
+        Family         = family,
+        Submodule      = sub_pretty,
+        Present        = length(present),
+        Missing        = length(missing),
+        Present_Genes  = paste(present, collapse = ";"),
+        Missing_Genes  = paste(missing, collapse = ";"),
+        stringsAsFactors = FALSE
+      )
+    )
+    
+    # stats per cluster
     md <- seu@meta.data
     if (!field %in% colnames(md)) next
-    md <- md[!is.na(md[[group_col]]) & !is.na(md[[cluster_col]]) & !is.na(md[[field]]), 
-             c(group_col, cluster_col, field)]
-    if (nrow(md) == 0) next
+    keep <- !is.na(md[[group_col]]) & !is.na(md[[cluster_col]]) & !is.na(md[[field]])
+    if (!any(keep)) next
+    md2 <- md[keep, c(group_col, cluster_col, field), drop = FALSE]
     
-    for (cl in sort(unique(md[[cluster_col]]))) {
-      subdf <- md[md[[cluster_col]] == cl, ]
-      grps <- unique(as.character(subdf[[group_col]]))
+    for (cl in sort(unique(md2[[cluster_col]]))) {
+      subdf <- md2[md2[[cluster_col]] == cl, , drop = FALSE]
+      grps  <- unique(as.character(subdf[[group_col]]))
+      
       if (length(grps) != 2) {
-        module_stats[[length(module_stats)+1]] <- data.frame(
-          Module = mod_name, Cluster = cl, PValue = NA_real_, HL_Shift = NA_real_
+        module_stats[[length(module_stats) + 1]] <- data.frame(
+          Module = mod_id, Module_Pretty = mod_pretty, Cluster = cl,
+          PValue = NA_real_, HL_Shift = NA_real_, stringsAsFactors = FALSE
         )
         next
       }
       
-      # Pick consistent order: ref (pos) vs other; HL_Shift is ref - other
       ord <- pick_ref_levels(subdf[[group_col]])
       if (length(ord) != 2) {
-        module_stats[[length(module_stats)+1]] <- data.frame(
-          Module = mod_name, Cluster = cl, PValue = NA_real_, HL_Shift = NA_real_
+        module_stats[[length(module_stats) + 1]] <- data.frame(
+          Module = mod_id, Module_Pretty = mod_pretty, Cluster = cl,
+          PValue = NA_real_, HL_Shift = NA_real_, stringsAsFactors = FALSE
         )
         next
       }
       
       x <- subdf[subdf[[group_col]] == ord[1], field]
       y <- subdf[subdf[[group_col]] == ord[2], field]
-      
-      # Require minimal n per group
       if (length(x) < 3 || length(y) < 3) {
-        module_stats[[length(module_stats)+1]] <- data.frame(
-          Module = mod_name, Cluster = cl, PValue = NA_real_, HL_Shift = NA_real_
+        module_stats[[length(module_stats) + 1]] <- data.frame(
+          Module = mod_id, Module_Pretty = mod_pretty, Cluster = cl,
+          PValue = NA_real_, HL_Shift = NA_real_, stringsAsFactors = FALSE
         )
         next
       }
       
-      wt <- tryCatch(
-        wilcox.test(x, y, alternative = "two.sided", exact = FALSE, conf.int = TRUE),
-        error = function(e) NULL
-      )
+      wt <- tryCatch(wilcox.test(x, y, alternative = "two.sided", exact = FALSE, conf.int = TRUE),
+                     error = function(e) NULL)
       if (is.null(wt)) {
-        module_stats[[length(module_stats)+1]] <- data.frame(
-          Module = mod_name, Cluster = cl, PValue = NA_real_, HL_Shift = NA_real_
+        module_stats[[length(module_stats) + 1]] <- data.frame(
+          Module = mod_id, Module_Pretty = mod_pretty, Cluster = cl,
+          PValue = NA_real_, HL_Shift = NA_real_, stringsAsFactors = FALSE
         )
       } else {
-        # wt$estimate is the Hodges–Lehmann location shift (x - y) when conf.int=TRUE
         hl <- unname(if (!is.null(wt$estimate)) wt$estimate else median(x) - median(y))
-        module_stats[[length(module_stats)+1]] <- data.frame(
-          Module = mod_name,
-          Cluster = cl,
-          PValue = wt$p.value,
-          HL_Shift = hl
+        module_stats[[length(module_stats) + 1]] <- data.frame(
+          Module = mod_id, Module_Pretty = mod_pretty, Cluster = cl,
+          PValue = wt$p.value, HL_Shift = hl, stringsAsFactors = FALSE
         )
       }
     }
@@ -268,6 +468,214 @@ for (family in names(modules)) {
 }
 # -----------------------------
 # Outputs
+# -----------------------------
+
+# -----------------------------
+# Composite module scores (per-cell) + plots
+# -----------------------------
+md <- seu@meta.data
+
+# Find submodule fields (per-cell)
+find_fields <- function(prefix) grep(paste0("^MS_", prefix, "_"), colnames(md), value = TRUE)
+
+# Composite IL-10 and TGFb per cell (average all submodules inside each family)
+il10_fields <- find_fields("IL10_STAT3")
+tgfb_fields <- find_fields("TGFb")
+
+if (length(il10_fields) > 0) {
+  md$MS_IL10_composite <- rowMeans(md[, il10_fields, drop = FALSE], na.rm = TRUE)
+}
+if (length(tgfb_fields) > 0) {
+  md$MS_TGFb_composite <- rowMeans(md[, tgfb_fields, drop = FALSE], na.rm = TRUE)
+}
+
+# Save back
+seu@meta.data <- md
+
+# Plot the two per-cell composites (boxplot IGRA +/- faceted by cluster)
+composite_dir <- file.path(out_dir, "Composites")
+dir.create(composite_dir, showWarnings = FALSE, recursive = TRUE)
+if ("MS_IL10_composite" %in% colnames(seu@meta.data)) {
+  plot_module(seu, "MS_IL10_composite", composite_dir, "IL-10 composite")
+}
+if ("MS_TGFb_composite" %in% colnames(seu@meta.data)) {
+  plot_module(seu, "MS_TGFb_composite", composite_dir, "TGFβ composite")
+}
+
+# -----------------------------
+# Per-cell RPI and mTOR–MAPK (MAI) (z-scored within cluster) + plots
+# -----------------------------
+# z-score helper on meta.data (per cell)
+z_within_cluster_cells <- function(df, cols, cluster_col) {
+  ok <- cols[cols %in% colnames(df)]
+  if (length(ok) == 0) return(df)
+  df <- df %>%
+    dplyr::group_by(.data[[cluster_col]]) %>%
+    dplyr::mutate(dplyr::across(all_of(ok), ~ as.numeric(scale(.x)), .names = "z_{col}")) %>%
+    dplyr::ungroup()
+  df
+}
+
+# Safe field builder for special submodule names
+mf <- function(fam, sub_pretty) module_field_name(fam, sub_pretty)
+
+# Per-cell inputs (use SAFE column names)
+# RPI positives
+pos_components <- c("MS_NFkB_activity", "MS_STAT_reactivation_axis",
+                    "MS_MYC_targets", "MS_Cell_cycle_E2F_G2M")
+gly_ox         <- c("MS_Glycolysis", "MS_OXPHOS")
+# RPI negatives
+neg_tgfb_target <- mf("TGFb", "TGFβ transcriptional targets")
+neg_il10_regs   <- c(
+  mf("IL10_STAT3", "STAT3-regulatory/Treg-overlap"),
+  mf("IL10_STAT3", "IL10RA/IL10RB–JAK1/TYK2–STAT3 module")
+)
+neg_other      <- c("MS_Apoptosis", "MS_Chromatin_repression")
+
+# Build per-cell derived pieces
+md <- seu@meta.data
+if (!all(c(group_col, cluster_col) %in% colnames(md))) {
+  stop("Missing group_col or cluster_col in meta.data.")
+}
+
+# Per-cell means for GlyOx and IL-10-regulatory block
+if (all(gly_ox %in% colnames(md))) {
+  md$MS_GlyOx_mean <- rowMeans(md[, gly_ox, drop = FALSE], na.rm = TRUE)
+}
+has_il10_regs <- neg_il10_regs[neg_il10_regs %in% colnames(md)]
+if (length(has_il10_regs) > 0) {
+  md$MS_IL10reg_mean <- rowMeans(md[, has_il10_regs, drop = FALSE], na.rm = TRUE)
+}
+
+# z-scale within cluster for all needed columns
+need_cols_cell <- unique(c(pos_components, "MS_GlyOx_mean", neg_tgfb_target, "MS_IL10reg_mean", neg_other))
+md <- z_within_cluster_cells(md, need_cols_cell, cluster_col)
+
+# Compute per-cell RPI = z(pos+GlyOx) - z(neg)
+z_pos_cols <- paste0("z_", c(pos_components, "MS_GlyOx_mean"))
+z_neg_cols <- paste0("z_", c(neg_tgfb_target, "MS_IL10reg_mean", neg_other))
+z_pos_cols <- z_pos_cols[z_pos_cols %in% colnames(md)]
+z_neg_cols <- z_neg_cols[z_neg_cols %in% colnames(md)]
+
+md$MS_RPI <- NA_real_
+if (length(z_pos_cols) > 0 && length(z_neg_cols) > 0) {
+  zpos <- if (length(z_pos_cols) == 1) md[[z_pos_cols]] else rowMeans(md[, z_pos_cols, drop = FALSE], na.rm = TRUE)
+  zneg <- if (length(z_neg_cols) == 1) md[[z_neg_cols]] else rowMeans(md[, z_neg_cols, drop = FALSE], na.rm = TRUE)
+  md$MS_RPI <- zpos - zneg
+}
+
+# Per-cell MAI = z(pro-autophagy + MAPK noncanonical) - z(mTORC)
+mapk_noncanon <- mf("TGFb", "TGFβ noncanonical (MAPK/PI3K)")
+auto_pro_cols <- c("MS_Autophagy_Initiation","MS_Autophagy_Conjugation","MS_Autophagy_Fusion",
+                   "MS_Autophagy_Lysosome","MS_Autophagy_CLEAR_TFs","MS_Autophagy_Cargo",
+                   "MS_Autophagy_Mitophagy","MS_Autophagy_Xenophagy","MS_Autophagy_AMPK",
+                   mapk_noncanon)
+auto_anti_col <- "MS_Autophagy_mTORC"
+
+# z-scale inputs for MAI (if present)
+need_mai <- unique(c(auto_pro_cols, auto_anti_col))
+md <- z_within_cluster_cells(md, need_mai, cluster_col)
+
+z_auto_pro <- paste0("z_", auto_pro_cols)
+z_auto_pro <- z_auto_pro[z_auto_pro %in% colnames(md)]
+z_auto_anti <- paste0("z_", auto_anti_col)
+
+md$MS_MAI <- NA_real_
+if (length(z_auto_pro) > 0 && z_auto_anti %in% colnames(md)) {
+  zpro <- if (length(z_auto_pro) == 1) md[[z_auto_pro]] else rowMeans(md[, z_auto_pro, drop = FALSE], na.rm = TRUE)
+  zanti <- md[[z_auto_anti]]
+  md$MS_MAI <- zpro - zanti
+}
+
+# Save back and plot per-cell RPI/MAI
+seu@meta.data <- md
+plot_module(seu, "MS_RPI", composite_dir, "Reactivation Propensity Index")
+plot_module(seu, "MS_MAI", composite_dir, "mTOR–MAPK Autophagy Index")
+
+# -----------------------------
+# Sample-level IL-10 vs TGFβ correlation (one dot per sample), colored by IGRA
+# -----------------------------
+sample_df <- seu@meta.data %>%
+  dplyr::filter(!is.na(orig.ident), !is.na(.data[[group_col]])) %>%
+  dplyr::group_by(orig.ident) %>%
+  dplyr::summarise(
+    IL10_comp = mean(MS_IL10_composite, na.rm = TRUE),
+    TGFb_comp = mean(MS_TGFb_composite,  na.rm = TRUE),
+    IGRA      = dplyr::first(.data[[group_col]]),
+    .groups   = "drop"
+  ) %>%
+  tidyr::drop_na(IL10_comp, TGFb_comp)
+
+# scatter (sample-level)
+p_scatter <- ggplot(sample_df, aes(x = TGFb_comp, y = IL10_comp, color = IGRA)) +
+  geom_point(size = 2.8, alpha = 0.9) +
+  geom_smooth(method = "lm", se = TRUE, linewidth = 0.8, color = "black") +
+  scale_color_manual(
+    values = c("Positive" = "#FF918A", "Negative" = "#A3F8A9"),
+    labels = c("Negative" = "IGRA Negative", "Positive" = "IGRA Positive"),
+    name   = "IGRA Status"
+  ) +
+  labs(
+    title = "IL-10 composite vs TGFβ composite (sample means)",
+    x = "TGFβ composite (sample mean)",
+    y = "IL-10 composite (sample mean)"
+  ) +
+  theme_classic(base_size = 16) +
+  theme(
+    panel.border = element_rect(color = "black", fill = NA, linewidth = 0.6),
+    axis.text = element_text(color = "black"),
+    legend.position = "top",
+    legend.title = element_text(face = "bold")
+  )
+
+ggsave(file.path(composite_dir, "IL10_vs_TGFb_composites_sample_scatter.png"),
+       p_scatter, width = 10, height = 7, dpi = 300, bg = "white")
+# -----------------------------
+# Sample-level IL-10 vs TGFβ scatter split by cell type (facet by cluster)
+# -----------------------------
+sample_by_cluster_df <- seu@meta.data %>%
+  dplyr::filter(!is.na(orig.ident), !is.na(.data[[group_col]]), !is.na(.data[[cluster_col]])) %>%
+  dplyr::group_by(orig.ident, .data[[cluster_col]]) %>%
+  dplyr::summarise(
+    IL10_comp = mean(MS_IL10_composite, na.rm = TRUE),
+    TGFb_comp = mean(MS_TGFb_composite,  na.rm = TRUE),
+    IGRA      = dplyr::first(.data[[group_col]]),
+    .groups   = "drop"
+  ) %>%
+  tidyr::drop_na(IL10_comp, TGFb_comp)
+
+p_scatter_bycell <- ggplot(sample_by_cluster_df,
+                           aes(x = TGFb_comp, y = IL10_comp, color = IGRA)) +
+  geom_point(size = 2, alpha = 0.9) +
+  geom_smooth(method = "lm", se = TRUE, linewidth = 0.7, color = "black") +
+  scale_color_manual(
+    values = c("Positive" = "#FF918A", "Negative" = "#A3F8A9"),
+    labels = c("Negative" = "IGRA Negative", "Positive" = "IGRA Positive"),
+    name   = "IGRA Status"
+  ) +
+  facet_wrap(stats::as.formula(paste0("~", cluster_col)), scales = "free") +
+  labs(
+    title = "IL-10 composite vs TGFβ composite (sample means), split by cell type",
+    x = "TGFβ composite (sample mean)",
+    y = "IL-10 composite (sample mean)"
+  ) +
+  theme_classic(base_size = 16) +
+  theme(
+    panel.border = element_rect(color = "black", fill = NA, linewidth = 0.6),
+    axis.text = element_text(color = "black"),
+    legend.position = "top",
+    legend.title = element_text(face = "bold"),
+    strip.background = element_rect(fill = "white", color = "black"),
+    strip.text = element_text(size = 12, face = "bold")
+  )
+
+ggsave(
+  file.path(composite_dir, "IL10_vs_TGFb_composites_sample_scatter_byCellType.png"),
+  p_scatter_bycell, width = 22, height = 16, dpi = 300, bg = "white"
+)
+
+# -----------------------------
+# Write module coverage & stats
 # -----------------------------
 # Coverage table
 write_tsv(coverage, file.path(out_dir, "Module_Gene_Coverage.tsv"))
@@ -277,16 +685,33 @@ stats_df <- dplyr::bind_rows(module_stats)
 stats_csv <- file.path(out_dir, "Module_Stats_byCluster.csv")
 readr::write_csv(stats_df, stats_csv)
 
+# -----------------------------
+# Reviewer-friendly outputs
+# -----------------------------
+coverage %>%
+  dplyr::mutate(Module_Reviewer = pretty_module_name(Module)) %>%
+  readr::write_csv(file.path(out_dir, "Module_Gene_Coverage_pretty.csv"))
 
-############# Overall Summary
+stats_df %>%
+  dplyr::mutate(Module_Reviewer = pretty_module_name(Module)) %>%
+  readr::write_csv(file.path(out_dir, "Module_Stats_byCluster_pretty.csv"))
 
+# ===========================
+# Overall Summary (per family)
+# ===========================
 plot_module_summary <- function(stats_df, out_dir) {
-  if (nrow(stats_df) == 0) return(invisible(NULL))
+  if (is.null(stats_df) || nrow(stats_df) == 0) return(invisible(NULL))
   
   df <- stats_df %>%
     dplyr::filter(!is.na(PValue)) %>%
     dplyr::mutate(
-      Family    = sub("^([^_]+).*", "\\1", Module),
+      # Use the pretty label if available; else build one dynamically
+      Module_Pretty = dplyr::coalesce(
+        if ("Module_Pretty" %in% names(.)) .data$Module_Pretty else NULL,
+        pretty_module_name(.data$Module)
+      ),
+      # Gracefully handle absence of Family column
+      Family = if ("Family" %in% names(.)) .data$Family else sub("^([^_]+).*", "\\1", .data$Module),
       Direction = ifelse(HL_Shift >= 0, "Positive", "Negative"),
       SizeMag   = pmin(abs(HL_Shift), 2),
       LogP      = -log10(PValue),
@@ -299,14 +724,20 @@ plot_module_summary <- function(stats_df, out_dir) {
       )
     )
   
-  df$Cluster <- factor(df$Cluster, levels = sort(unique(df$Cluster)))
-  df$Module  <- factor(df$Module,  levels = rev(unique(df$Module)))
-  fill_vals  <- c("Positive" = "#FF918A", "Negative" = "#A3F8A9")
-  families   <- unique(df$Family)
   
+  # keep a stable module order within each family (by pretty label)
+  df <- df %>%
+    dplyr::group_by(Family) %>%
+    dplyr::mutate(Module_Pretty = factor(Module_Pretty, levels = sort(unique(Module_Pretty), decreasing = TRUE))) %>%
+    dplyr::ungroup()
+  
+  df$Cluster <- factor(df$Cluster, levels = sort(unique(df$Cluster)))
+  fill_vals  <- c("Positive" = "#FF918A", "Negative" = "#A3F8A9")
+  
+  families   <- unique(df$Family)
   for (fam in families) {
     subdf  <- df[df$Family == fam, , drop = FALSE]
-    n_rows <- length(unique(subdf$Module))
+    n_rows <- length(unique(subdf$Module_Pretty))
     
     # --- Dynamic sizing (inches) ---
     row_height_in <- 0.45
@@ -316,7 +747,7 @@ plot_module_summary <- function(stats_df, out_dir) {
     fig_h         <- max(min_h_in, min(max_h_in, baseline_in + row_height_in * n_rows))
     fig_w         <- 14
     
-    # --- Defaults (good for 5–10 rows) ---
+    # --- Font/marker tuning by density ---
     base_size <- max(12, min(16, 16 - 0.08 * (n_rows - 15)))
     size_min  <- 3.0
     size_max  <- max(6.5, min(9.5, 9.5 - 0.07 * (n_rows - 15)))
@@ -325,44 +756,24 @@ plot_module_summary <- function(stats_df, out_dir) {
     top_expand   <- 0.22
     bottom_expand<- 0.12
     
-    # --- Special handling for your row counts ---
     if (n_rows <= 3) {
-      # Very few rows → big dots; slightly limit max size & raise stars a touch
-      size_max     <- 7.2
-      star_nudge   <- 0.18
-      top_expand   <- 0.30
-      bottom_expand<- 0.22
+      size_max     <- 7.2; star_nudge <- 0.18; top_expand <- 0.30; bottom_expand <- 0.22
     } else if (n_rows == 4) {
-      size_max     <- 7.8
-      star_nudge   <- 0.18
-      top_expand   <- 0.28
-      bottom_expand<- 0.20
+      size_max     <- 7.8; star_nudge <- 0.18; top_expand <- 0.28; bottom_expand <- 0.20
     } else if (n_rows == 11) {
-      # Dense but not extreme → lift stars slightly & give more top space
-      size_max     <- min(size_max, 8.8)  # keep dots substantial but not overwhelming
-      star_nudge   <- 0.27                # a bit higher to clear big dots
-      star_size    <- 3.6                 # tiny reduction for extra clearance
-      top_expand   <- 0.16
-      bottom_expand<- 0.10
+      size_max     <- min(size_max, 8.8); star_nudge <- 0.27; star_size <- 3.6
+      top_expand   <- 0.16; bottom_expand <- 0.10
     } else if (n_rows <= 6) {
-      star_nudge   <- 0.16
-      top_expand   <- 0.30
-      bottom_expand<- 0.20
+      star_nudge   <- 0.16; top_expand <- 0.30; bottom_expand <- 0.20
     } else if (n_rows <= 10) {
-      star_nudge   <- 0.18
-      top_expand   <- 0.22
-      bottom_expand<- 0.12
+      star_nudge   <- 0.18; top_expand <- 0.22; bottom_expand <- 0.12
     } else if (n_rows <= 18) {
-      star_nudge   <- 0.22
-      top_expand   <- 0.15
-      bottom_expand<- 0.08
+      star_nudge   <- 0.22; top_expand <- 0.15; bottom_expand <- 0.08
     } else {
-      star_nudge   <- 0.25
-      top_expand   <- 0.12
-      bottom_expand<- 0.06
+      star_nudge   <- 0.25; top_expand <- 0.12; bottom_expand <- 0.06
     }
     
-    p <- ggplot2::ggplot(subdf, ggplot2::aes(x = Cluster, y = Module)) +
+    p <- ggplot2::ggplot(subdf, ggplot2::aes(x = Cluster, y = Module_Pretty)) +
       ggplot2::geom_point(
         ggplot2::aes(fill = Direction, size = SizeMag),
         shape = 21, color = "black", stroke = 0.6, alpha = 1
@@ -408,115 +819,12 @@ plot_module_summary <- function(stats_df, out_dir) {
       )
     
     ggplot2::ggsave(
-      filename  = file.path(out_dir, paste0("Module_Summary_", fam, ".png")),
-      plot      = p,
-      width     = fig_w,
-      height    = fig_h,
-      units     = "in",
-      dpi       = 300,
-      bg        = "white",
+      filename  = file.path(out_dir, paste0("Module_Summary_", safe_id(fam), ".png")),
+      plot      = p, width = fig_w, height = fig_h, units = "in", dpi = 300, bg = "white",
       limitsize = FALSE
-    )
-    
-    message(
-      "✅ Saved: ", file.path(out_dir, paste0("Module_Summary_", fam, ".png")),
-      " (", sprintf("%.1f", fig_w), "×", sprintf("%.1f", fig_h), " in; rows=", n_rows,
-      "; star_nudge=", star_nudge, "; star_size=", star_size,
-      "; size_max=", sprintf("%.1f", size_max),
-      "; expandTop=", top_expand, "; expandBottom=", bottom_expand, ")"
     )
   }
 }
 
+# Run it
 plot_module_summary(stats_df, out_dir)
-
-###########################3
-## ---- Prep a test subset ----
-if (!"Family" %in% names(stats_df)) {
-  stats_df$Family <- sub("^([^_]+).*", "\\1", stats_df$Module)
-}
-test_fam <- unique(stats_df$Family)[1]
-
-subdf <- subset(stats_df, Family == test_fam & !is.na(PValue))
-subdf$Direction <- ifelse(subdf$HL_Shift >= 0, "Positive", "Negative")
-subdf$SizeMag   <- pmin(abs(subdf$HL_Shift), 2)   # cap for nicer scaling
-
-# Significance stars (common cutoffs); blank if not significant
-subdf$Signif <- ifelse(subdf$PValue <= 1e-4, "****",
-                       ifelse(subdf$PValue <= 1e-3, "***",
-                              ifelse(subdf$PValue <= 1e-2, "**",
-                                     ifelse(subdf$PValue <= 5e-2, "*", "")
-                              )))
-
-# Factor ordering for tidy axes
-subdf$Cluster <- factor(subdf$Cluster, levels = sort(unique(subdf$Cluster)))
-subdf$Module  <- factor(subdf$Module,  levels = rev(unique(subdf$Module)))
-
-fill_vals <- c("Positive" = "#FF918A", "Negative" = "#A3F8A9")
-
-n_mods <- length(unique(subdf$Module))
-fig_h  <- max(6, min(20, n_mods * 0.5))
-
-## ---- Build test plot ----
-p <- ggplot(subdf, aes(x = Cluster, y = Module)) +
-  # Dots: fully opaque, outlined for contrast
-  geom_point(
-    aes(fill = Direction, size = SizeMag),
-    shape = 21, color = "black", stroke = 0.5, alpha = 1
-  ) +
-  # Stars: moved clearly above the dot using a Y nudge on discrete axis
-  geom_text(
-    data = subset(subdf, Signif != ""),
-    aes(label = Signif),
-    color = "red", fontface = "bold",
-    size = 4, vjust = 0,                    # anchor bottom of text
-    position = position_nudge(y = 0.18)       # push above the dot
-  ) +
-  scale_fill_manual(values = fill_vals, name = "Direction") +
-  scale_size_continuous(
-    range = c(3.2, 9.5),
-    name  = "|HL Shift|"
-  ) +
-  labs(
-    title = paste0(test_fam, " Module Summary: IGRA+ vs IGRA−"),
-    x = "Cluster", y = "Module"
-  ) +
-  # Add top/bottom breathing room so nudged stars aren’t clipped
-  scale_y_discrete(expand = expansion(mult = c(0.04, 0.12))) +
-  coord_cartesian(clip = "off") +
-  # Publication theme
-  theme_classic(base_size = 16) +
-  theme(
-    plot.title = element_text(size = 18, face = "bold", hjust = 0.5),
-    axis.text.x = element_text(angle = 45, hjust = 1, color = "black"),
-    axis.text.y = element_text(color = "black"),
-    panel.border = element_rect(color = "black", fill = NA, linewidth = 0.6),
-    
-    # Legend polish
-    legend.position = "top",
-    legend.box = "horizontal",
-    legend.title = element_text(face = "bold"),
-    legend.text = element_text(),
-    legend.key.height = unit(10, "pt"),
-    legend.key.width  = unit(24, "pt"),
-    legend.box.margin = margin(t = 4, r = 4, b = 4, l = 4),
-    legend.background = element_rect(fill = "white", color = "black", linewidth = 0.4)
-  ) +
-  guides(
-    fill = guide_legend(
-      override.aes = list(size = 6, stroke = 0.6),
-      order = 1, title.position = "top", label.position = "right"
-    ),
-    size = guide_legend(
-      order = 2, title.position = "top", label.position = "right"
-    )
-  )
-
-p
-
-## ---- Save test figure ----
-ggsave(
-  filename = file.path(out_dir, paste0("Module_Summary_TEST_", test_fam, ".png")),
-  plot = p, width = 14, height = fig_h, dpi = 300, bg = "white"
-)
-
