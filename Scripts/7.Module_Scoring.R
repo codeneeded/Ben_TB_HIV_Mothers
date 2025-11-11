@@ -32,13 +32,12 @@ group_col   <- "IGRA_status"
 # Module definitions (line by line, grouped in families)
 # -----------------------------
 modules <- list(
-  
   # ---- TGF-beta ----
   TGFb = list(
-    "TGFB–TGFBR module"               = c("ACVRL1","ENG","TGFB1","TGFB2","TGFB3","TGFBR1","TGFBR2","TGFBR3"),
-    "SMAD2/3–SMAD4 module"            = c("PMEPA1","SKI","SKIL","SMAD2","SMAD3","SMAD4","SMAD7"),
-    "TGFβ transcriptional targets"    = c("CCR7","COL1A1","COL3A1","CTLA4","FOXP3","IKZF2","ITGAE","LRRC32","PTPN14","SELL","SERPINE1"),
-    "TGFβ noncanonical (MAPK/PI3K)"   = c("AKT1","FOS","JUN","MAP3K7","MAPK14","MAPK8","MAPK9","MTOR","NFKBIA","PIK3CD","RELB","RPTOR")
+    "TGFB–TGFBR module"             = c("ACVRL1","ENG","TGFB1","TGFB2","TGFB3","TGFBR1","TGFBR2","TGFBR3"),
+    "SMAD2/3–SMAD4 module"          = c("PMEPA1","SKI","SKIL","SMAD2","SMAD3","SMAD4","SMAD7"),
+    "TGFβ transcriptional targets"  = c("CCR7","COL1A1","COL3A1","CTLA4","FOXP3","IKZF2","ITGAE","LRRC32","PTPN14","SELL","SERPINE1"),
+    "TGFβ noncanonical (MAPK/PI3K)" = c("AKT1","FOS","JUN","MAP3K7","MAPK14","MAPK8","MAPK9","MTOR","NFKBIA","PIK3CD","RELB","RPTOR")
   ),
   
   # ---- IL-10 / STAT3 ----
@@ -50,7 +49,7 @@ modules <- list(
   ),
   
   # ---- Reservoir CD4 ----
-  Reservoir_CD4 = list(
+  CD4_Reservoir = list(
     Tfh_Core          = c("BCL6","BATF","CXCR5","ICOS","IL21","MAF","PDCD1","SH2D1A"),
     Tph_Discriminator = c("CCR2","CXCL13","ICOS","PDCD1","PRDM1"),
     Reservoir_Memory  = c("BCL2","CCR7","IL7R","SELL","TCF7")
@@ -108,38 +107,43 @@ modules <- list(
     AMPK         = c("PRKAA1","PRKAA2","PRKAB1","PRKAG1","STK11")
   ),
   
-  # ---- NF-kB activity ----
-  NFkB_activity = sort(c("BCL2A1","BIRC2","BIRC3","CCL2","CCL3","CCL4","CCL5","CXCL8","ICAM1",
-                         "IL1B","IL6","NFKB1","NFKBIA","PTGS2","RELA","RELB","SELE","TNF","TNFAIP2",
-                         "TNFAIP3","TRAF1","TRAF2","VCAM1","NOD2")),
-  
-  # ---- STAT reactivation axis ----
-  STAT_reactivation_axis = sort(c("CD40LG","CISH","CXCL9","CXCL10","IFNGR1","IFNGR2","IL6R","IL6ST","IRF1",
-                                  "ICOS","JAK1","JAK2","OSMR","PIM1","SOCS1","SOCS3","STAT1","STAT3","STAT5A","STAT5B","TYK2")),
-  
-  # ---- MYC targets ----
-  MYC_targets = sort(c("CDK4","E2F1","EIF4A1","EIF4E","EIF5A","HSPD1","HSP90AA1","LDHA","MAX","MYC",
-                       "NCL","NPM1","PABPC1","PCNA","RPL11","RPLP0","RPS6","SLC2A1","SRSF1","ODC1")),
-  
-  # ---- Cell-cycle / E2F / G2M ----
-  Cell_cycle_E2F_G2M = sort(c("AURKA","AURKB","BUB1","BUB1B","CCNA2","CCNB1","CCNB2","CDC20","CDC25A","CDC25C",
-                              "CDK1","CDK2","MCM2","MCM3","MCM4","MCM5","MCM6","MCM7","MKI67","PCNA","PLK1","TK1","TOP2A")),
-  
-  # ---- Glycolysis ----
-  Glycolysis = sort(c("ALDOA","ENO1","GAPDH","GPI","HK2","LDHA","LDHB","PDK1","PDK3","PFKFB3","PFKP","PGAM1",
-                      "PGK1","PKM","SLC2A1","SLC2A3","TPI1")),
-  
-  # ---- Oxidative phosphorylation ----
-  OXPHOS = sort(c("ATP5F1A","ATP5F1B","ATP5MC1","ATP5PF","COX4I1","COX5B","COX6C","CYC1","NDUFA5","NDUFA9",
-                  "NDUFB8","NDUFS1","SDHB","SDHC","UQCRC1","UQCRC2","UQCRQ")),
-  
-  # ---- Apoptosis ----
-  Apoptosis = sort(c("BCL2","BCL2A1","BCL2L1","BCL2L2","BIRC2","BIRC3","CFLAR","MDM2","MCL1","TRAF1","TRAF2","XIAP")),
-  
-  # ---- Chromatin repression/silencing ----
-  Chromatin_repression = sort(c("CHD4","DNMT1","DNMT3A","DNMT3B","EED","EZH2","GATAD2A","HDAC1","HDAC2",
-                                "KDM1A","MBD2","MTA1","MTA2","NCOR1","NCOR2","RCOR1","SETDB1","SIN3A","SIN3B","SUZ12"))
+  # ---- Reservoir Favoring (all former "#1" sets) ----
+  Reservoir_Favoring = list(
+    NFkB_activity = sort(c(
+      "BCL2A1","BIRC2","BIRC3","CCL2","CCL3","CCL4","CCL5","CXCL8","ICAM1",
+      "IL1B","IL6","NFKB1","NFKBIA","PTGS2","RELA","RELB","SELE","TNF","TNFAIP2",
+      "TNFAIP3","TRAF1","TRAF2","VCAM1","NOD2"
+    )),
+    STAT_reactivation_axis = sort(c(
+      "CD40LG","CISH","CXCL9","CXCL10","IFNGR1","IFNGR2","IL6R","IL6ST","IRF1",
+      "ICOS","JAK1","JAK2","OSMR","PIM1","SOCS1","SOCS3","STAT1","STAT3","STAT5A","STAT5B","TYK2"
+    )),
+    MYC_targets = sort(c(
+      "CDK4","E2F1","EIF4A1","EIF4E","EIF5A","HSPD1","HSP90AA1","LDHA","MAX","MYC",
+      "NCL","NPM1","PABPC1","PCNA","RPL11","RPLP0","RPS6","SLC2A1","SRSF1","ODC1"
+    )),
+    Cell_cycle_E2F_G2M = sort(c(
+      "AURKA","AURKB","BUB1","BUB1B","CCNA2","CCNB1","CCNB2","CDC20","CDC25A","CDC25C",
+      "CDK1","CDK2","MCM2","MCM3","MCM4","MCM5","MCM6","MCM7","MKI67","PCNA","PLK1","TK1","TOP2A"
+    )),
+    Glycolysis = sort(c(
+      "ALDOA","ENO1","GAPDH","GPI","HK2","LDHA","LDHB","PDK1","PDK3","PFKFB3","PFKP","PGAM1",
+      "PGK1","PKM","SLC2A1","SLC2A3","TPI1"
+    )),
+    OXPHOS = sort(c(
+      "ATP5F1A","ATP5F1B","ATP5MC1","ATP5PF","COX4I1","COX5B","COX6C","CYC1","NDUFA5","NDUFA9",
+      "NDUFB8","NDUFS1","SDHB","SDHC","UQCRC1","UQCRC2","UQCRQ"
+    )),
+    Apoptosis = sort(c(
+      "BCL2","BCL2A1","BCL2L1","BCL2L2","BIRC2","BIRC3","CFLAR","MDM2","MCL1","TRAF1","TRAF2","XIAP"
+    )),
+    Chromatin_repression = sort(c(
+      "CHD4","DNMT1","DNMT3A","DNMT3B","EED","EZH2","GATAD2A","HDAC1","HDAC2",
+      "KDM1A","MBD2","MTA1","MTA2","NCOR1","NCOR2","RCOR1","SETDB1","SIN3A","SIN3B","SUZ12"
+    ))
+  )
 )
+
 
 # -----------------------------
 # Scoring + plotting
@@ -505,43 +509,49 @@ if ("MS_TGFb_composite" %in% colnames(seu@meta.data)) {
 # -----------------------------
 # Per-cell RPI and mTOR–MAPK (MAI) (z-scored within cluster) + plots
 # -----------------------------
-# z-score helper on meta.data (per cell)
-z_within_cluster_cells <- function(df, cols, cluster_col) {
-  ok <- cols[cols %in% colnames(df)]
-  if (length(ok) == 0) return(df)
-  df <- df %>%
-    dplyr::group_by(.data[[cluster_col]]) %>%
-    dplyr::mutate(dplyr::across(all_of(ok), ~ as.numeric(scale(.x)), .names = "z_{col}")) %>%
-    dplyr::ungroup()
-  df
-}
+# -----------------------------
+# Per-cell RPI (updated for Reservoir_Favoring submodules)
+# -----------------------------
 
-# Safe field builder for special submodule names
-mf <- function(fam, sub_pretty) module_field_name(fam, sub_pretty)
+# Helper to build SAFE module-score column names you already use
+rf  <- function(sub) module_field_name("Reservoir_Favoring", sub)
+mf  <- function(fam, sub_pretty) module_field_name(fam, sub_pretty)  # keep existing
 
-# Per-cell inputs (use SAFE column names)
-# RPI positives
-pos_components <- c("MS_NFkB_activity", "MS_STAT_reactivation_axis",
-                    "MS_MYC_targets", "MS_Cell_cycle_E2F_G2M")
-gly_ox         <- c("MS_Glycolysis", "MS_OXPHOS")
+# RPI positives (Reservoir_Favoring submodules)
+pos_components <- c(
+  rf("NFkB_activity"),
+  rf("STAT_reactivation_axis"),
+  rf("MYC_targets"),
+  rf("Cell_cycle_E2F_G2M")
+)
+
+# Glycolysis / OXPHOS are also under Reservoir_Favoring now
+gly_ox <- c(
+  rf("Glycolysis"),
+  rf("OXPHOS")
+)
+
 # RPI negatives
 neg_tgfb_target <- mf("TGFb", "TGFβ transcriptional targets")
 neg_il10_regs   <- c(
   mf("IL10_STAT3", "STAT3-regulatory/Treg-overlap"),
   mf("IL10_STAT3", "IL10RA/IL10RB–JAK1/TYK2–STAT3 module")
 )
-neg_other      <- c("MS_Apoptosis", "MS_Chromatin_repression")
+neg_other <- c(
+  rf("Apoptosis"),
+  rf("Chromatin_repression")
+)
 
 # Build per-cell derived pieces
 md <- seu@meta.data
-if (!all(c(group_col, cluster_col) %in% colnames(md))) {
-  stop("Missing group_col or cluster_col in meta.data.")
-}
+stopifnot(all(c(group_col, cluster_col) %in% colnames(md)))
 
 # Per-cell means for GlyOx and IL-10-regulatory block
-if (all(gly_ox %in% colnames(md))) {
-  md$MS_GlyOx_mean <- rowMeans(md[, gly_ox, drop = FALSE], na.rm = TRUE)
+has_glyox <- gly_ox[gly_ox %in% colnames(md)]
+if (length(has_glyox) > 0) {
+  md$MS_GlyOx_mean <- rowMeans(md[, has_glyox, drop = FALSE], na.rm = TRUE)
 }
+
 has_il10_regs <- neg_il10_regs[neg_il10_regs %in% colnames(md)]
 if (length(has_il10_regs) > 0) {
   md$MS_IL10reg_mean <- rowMeans(md[, has_il10_regs, drop = FALSE], na.rm = TRUE)
@@ -549,9 +559,10 @@ if (length(has_il10_regs) > 0) {
 
 # z-scale within cluster for all needed columns
 need_cols_cell <- unique(c(pos_components, "MS_GlyOx_mean", neg_tgfb_target, "MS_IL10reg_mean", neg_other))
+need_cols_cell <- need_cols_cell[need_cols_cell %in% colnames(md)]
 md <- z_within_cluster_cells(md, need_cols_cell, cluster_col)
 
-# Compute per-cell RPI = z(pos+GlyOx) - z(neg)
+# Compute per-cell RPI = z(pos + GlyOx) - z(neg)
 z_pos_cols <- paste0("z_", c(pos_components, "MS_GlyOx_mean"))
 z_neg_cols <- paste0("z_", c(neg_tgfb_target, "MS_IL10reg_mean", neg_other))
 z_pos_cols <- z_pos_cols[z_pos_cols %in% colnames(md)]
@@ -563,6 +574,7 @@ if (length(z_pos_cols) > 0 && length(z_neg_cols) > 0) {
   zneg <- if (length(z_neg_cols) == 1) md[[z_neg_cols]] else rowMeans(md[, z_neg_cols, drop = FALSE], na.rm = TRUE)
   md$MS_RPI <- zpos - zneg
 }
+
 
 # Per-cell MAI = z(pro-autophagy + MAPK noncanonical) - z(mTORC)
 mapk_noncanon <- mf("TGFb", "TGFβ noncanonical (MAPK/PI3K)")
@@ -591,6 +603,157 @@ if (length(z_auto_pro) > 0 && z_auto_anti %in% colnames(md)) {
 seu@meta.data <- md
 plot_module(seu, "MS_RPI", composite_dir, "Reactivation Propensity Index")
 plot_module(seu, "MS_MAI", composite_dir, "mTOR–MAPK Autophagy Index")
+
+# -----------------------------
+# SAMPLE LEVEL (safe version)
+# -----------------------------
+suppressPackageStartupMessages({ library(dplyr); library(ggplot2) })
+
+sample_col  <- "orig.ident"
+group_col   <- if (exists("group_col")) group_col else "IGRA_status"
+cluster_col <- if (exists("cluster_col")) cluster_col else "seurat_clusters"
+
+# Output
+sample_out_dir <- file.path(composite_dir, "Sample_Level")
+dir.create(sample_out_dir, recursive = TRUE, showWarnings = FALSE)
+
+# -----------------------------
+# Pull meta.data and sanity checks
+# -----------------------------
+md <- seu@meta.data
+need_cols <- c(sample_col, group_col, cluster_col, "MS_RPI", "MS_MAI")
+stopifnot(all(need_cols %in% colnames(md)))
+
+# Ensure types are friendly
+md[[sample_col]]  <- as.character(md[[sample_col]])
+md[[group_col]]   <- as.character(md[[group_col]])
+md[[cluster_col]] <- as.character(md[[cluster_col]])
+
+# Helper: majority Group per sample (ties broken deterministically)
+sample_group <- md %>%
+  filter(!is.na(.data[[group_col]]), .data[[group_col]] != "") %>%
+  count(.data[[sample_col]], .data[[group_col]], name = "n") %>%
+  group_by(.data[[sample_col]]) %>%
+  arrange(desc(n), .by_group = TRUE) %>%
+  slice(1) %>%
+  ungroup() %>%
+  select(all_of(sample_col), all_of(group_col))
+
+# -----------------------------
+# Summary helpers
+# -----------------------------
+summarise_sample_metric <- function(df, metric) {
+  stopifnot(metric %in% colnames(df))
+  out <- df %>%
+    group_by(.data[[sample_col]]) %>%
+    summarise(
+      Mean   = mean(.data[[metric]], na.rm = TRUE),
+      SD     = sd(.data[[metric]],   na.rm = TRUE),
+      NCells = dplyr::n(),
+      .groups = "drop"
+    ) %>%
+    left_join(sample_group, by = setNames(sample_col, sample_col)) %>%
+    rename(Sample = !!sample_col, Group = !!group_col) %>%
+    mutate(
+      Group = ifelse(is.na(Group) | Group == "", "Unknown", Group)
+    ) %>%
+    # drop rows with non-finite means (boxplot can't handle them)
+    filter(is.finite(Mean))
+  out
+}
+
+summarise_sample_cluster_metric <- function(df, metric) {
+  stopifnot(metric %in% colnames(df))
+  out <- df %>%
+    group_by(.data[[sample_col]], .data[[cluster_col]]) %>%
+    summarise(
+      Mean   = mean(.data[[metric]], na.rm = TRUE),
+      SD     = sd(.data[[metric]],   na.rm = TRUE),
+      NCells = dplyr::n(),
+      .groups = "drop"
+    ) %>%
+    left_join(sample_group, by = setNames(sample_col, sample_col)) %>%
+    rename(Sample = !!sample_col, Group = !!group_col, Cluster = !!cluster_col) %>%
+    mutate(
+      Group = ifelse(is.na(Group) | Group == "", "Unknown", Group)
+    ) %>%
+    filter(is.finite(Mean))
+  out
+}
+
+# -----------------------------
+# Compute summaries
+# -----------------------------
+rpi_sample_overall <- summarise_sample_metric(md, "MS_RPI")
+mai_sample_overall <- summarise_sample_metric(md, "MS_MAI")
+rpi_sample_by_cluster <- summarise_sample_cluster_metric(md, "MS_RPI")
+mai_sample_by_cluster <- summarise_sample_cluster_metric(md, "MS_MAI")
+
+# Save CSVs
+write.csv(rpi_sample_overall,  file.path(sample_out_dir, "RPI_per_sample_overall.csv"),  row.names = FALSE)
+write.csv(mai_sample_overall,  file.path(sample_out_dir, "MAI_per_sample_overall.csv"),  row.names = FALSE)
+write.csv(rpi_sample_by_cluster, file.path(sample_out_dir, "RPI_per_sample_by_cluster.csv"), row.names = FALSE)
+write.csv(mai_sample_by_cluster, file.path(sample_out_dir, "MAI_per_sample_by_cluster.csv"), row.names = FALSE)
+
+# -----------------------------
+# Plot (safe) helpers
+# -----------------------------
+plot_sample_overall <- function(tab, title_y, fname) {
+  dat <- tab %>% filter(is.finite(Mean))
+  if (nrow(dat) == 0) {
+    message("[", title_y, "] No finite data for overall plot; skipping.")
+    return(invisible(NULL))
+  }
+  # If only one group, avoid empty boxplot stats
+  have_box <- length(unique(dat$Group)) > 0 && any(!is.na(dat$Mean))
+  p <- ggplot(dat, aes(x = Group, y = Mean)) +
+    { if (have_box) geom_boxplot(outlier.shape = NA, width = 0.6) } +
+    geom_jitter(aes(size = NCells, color = Sample),
+                width = 0.15, alpha = 0.85, show.legend = TRUE) +
+    scale_size_continuous(name = "Cells per sample") +
+    labs(title = paste0(title_y, " — Per Sample (overall)"),
+         x = NULL, y = paste0("Mean ", title_y, " per sample")) +
+    theme_bw(base_size = 12) +
+    theme(legend.position = "right")
+  ggsave(file.path(sample_out_dir, fname), p, width = 9, height = 6.5, dpi = 350)
+}
+
+plot_sample_by_cluster <- function(tab, title_y, fname, min_pts_per_cluster = 3) {
+  dat0 <- tab %>% filter(is.finite(Mean))
+  if (nrow(dat0) == 0) {
+    message("[", title_y, "] No finite data for by-cluster plot; skipping.")
+    return(invisible(NULL))
+  }
+  # Keep clusters with enough points to form a boxplot/jitter panel
+  keep_clusters <- dat0 %>%
+    count(Cluster, name = "n_pts") %>%
+    filter(n_pts >= min_pts_per_cluster) %>%
+    pull(Cluster)
+  dat <- dat0 %>% filter(Cluster %in% keep_clusters)
+  if (nrow(dat) == 0) {
+    message("[", title_y, "] All clusters filtered due to low n; skipping.")
+    return(invisible(NULL))
+  }
+  p <- ggplot(dat, aes(x = Group, y = Mean)) +
+    geom_boxplot(outlier.shape = NA, width = 0.6) +
+    geom_jitter(aes(size = NCells, color = Sample),
+                width = 0.15, alpha = 0.85, show.legend = FALSE) +
+    facet_wrap(~ Cluster, scales = "free_y") +
+    labs(title = paste0(title_y, " — Per Sample by Cluster"),
+         x = NULL, y = paste0("Mean ", title_y, " per sample (cluster)")) +
+    theme_bw(base_size = 11)
+  ggsave(file.path(sample_out_dir, fname), p, width = 12, height = 8.5, dpi = 350)
+}
+
+# -----------------------------
+# Make & save plots (safe)
+# -----------------------------
+plot_sample_overall(rpi_sample_overall, "RPI", "RPI_per_sample_overall.png")
+plot_sample_overall(mai_sample_overall, "MAI", "MAI_per_sample_overall.png")
+plot_sample_by_cluster(rpi_sample_by_cluster, "RPI", "RPI_per_sample_by_cluster.png")
+plot_sample_by_cluster(mai_sample_by_cluster, "MAI", "MAI_per_sample_by_cluster.png")
+
+message("Saved sample-level CSVs and plots to: ", sample_out_dir)
 
 # -----------------------------
 # Sample-level IL-10 vs TGFβ correlation (one dot per sample), colored by IGRA
@@ -699,6 +862,7 @@ stats_df %>%
 # ===========================
 # Overall Summary (per family)
 # ===========================
+stats_df$Module
 plot_module_summary <- function(stats_df, out_dir) {
   if (is.null(stats_df) || nrow(stats_df) == 0) return(invisible(NULL))
   
