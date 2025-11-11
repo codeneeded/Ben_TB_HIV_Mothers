@@ -212,7 +212,7 @@ for (f in dge_files) {
   # Make volcano plot
   vp <- EnhancedVolcano(
     deg,
-    lab = deg$hgnc_symbol,
+    lab = deg$X,
     x = "avg_log2FC",         # Seurat FindMarkers column
     y = "p_val",              # raw p-value column
     pCutoffCol = "p_val_adj", # adjusted p-value column
@@ -244,3 +244,210 @@ for (f in dge_files) {
     height = 7
   )
 }
+
+##################### Pseudobulking and DEG #######################################################################
+## ---- Setup ----
+suppressPackageStartupMessages({
+  library(Seurat)
+  library(Matrix)
+  library(edgeR)
+})
+
+## ---- 1) Pseudobulk by sample (orig.ident) ----
+pseudobulk_by_sample <- function(
+    seu,
+    sample_col = "orig.ident",
+    group_col  = "IGRA_status",
+    assay      = "RNA",
+    min_cells_per_sample = 20,   # tweak as needed
+    keep_groups = c("Negative","Positive") # we compare these two levels
+){
+  stopifnot(sample_col %in% colnames(seu@meta.data))
+  stopifnot(group_col  %in% colnames(seu@meta.data))
+  
+  X <- GetAssayData(seu, assay = assay, slot = "counts")  # genes x cells (dgCMatrix)
+  md <- seu@meta.data[, c(sample_col, group_col), drop = FALSE]
+  colnames(md) <- c("sample", "group")
+  md$group <- droplevels(factor(md$group))
+  
+  ## keep only the two groups of interest
+  keep_cells <- md$group %in% keep_groups & !is.na(md$group) & !is.na(md$sample)
+  X <- X[, keep_cells, drop = FALSE]
+  md <- md[keep_cells, , drop = FALSE]
+  
+  ## filter samples with very few cells
+  n_cells_by_sample <- table(md$sample)
+  good_samples <- names(n_cells_by_sample)[n_cells_by_sample >= min_cells_per_sample]
+  keep_cells2 <- md$sample %in% good_samples
+  X <- X[, keep_cells2, drop = FALSE]
+  md <- md[keep_cells2, , drop = FALSE]
+  
+  ## ensure each sample maps to a single group (warn & drop ambiguous)
+  grp_by_sample <- tapply(as.character(md$group), md$sample, function(v) unique(v))
+  bad <- vapply(grp_by_sample, function(v) length(v) != 1, logical(1))
+  if (any(bad)) {
+    warning("Dropping samples with mixed IGRA_status: ",
+            paste(names(bad)[bad], collapse = ", "))
+  }
+  keep_samples <- names(grp_by_sample)[!bad]
+  keep_cells3 <- md$sample %in% keep_samples
+  X <- X[, keep_cells3, drop = FALSE]
+  md <- md[keep_cells3, , drop = FALSE]
+  
+  ## sparse aggregation via sample model matrix (genes x cells %*% cells x samples)
+  smp_f <- factor(md$sample, levels = unique(md$sample))
+  M <- Matrix::sparse.model.matrix(~ 0 + smp_f)   # columns are samples
+  colnames(M) <- levels(smp_f)
+  PB <- X %*% M                                   # genes x samples (dgCMatrix)
+  
+  ## sample metadata
+  sample_md <- data.frame(
+    sample = colnames(PB),
+    group  = vapply(colnames(PB), function(s) as.character(unique(md$group[md$sample == s]))[1], character(1)),
+    n_cells = as.integer(n_cells_by_sample[colnames(PB)]),
+    row.names = colnames(PB),
+    stringsAsFactors = FALSE
+  )
+  ## keep only samples from the two groups and both groups present
+  sample_md$group <- factor(sample_md$group, levels = keep_groups)
+  PB <- PB[, rownames(sample_md), drop = FALSE]
+  
+  if (nlevels(droplevels(sample_md$group)) < 2)
+    stop("Need at least one sample in each of: ", paste(keep_groups, collapse = " & "))
+  
+  list(counts = PB, sample_md = sample_md)
+}
+
+## ---- 2) edgeR DGE (Positive vs Negative) ----
+run_edger_two_group <- function(pb_counts, sample_md, ref = "Negative"){
+  stopifnot(all(colnames(pb_counts) == rownames(sample_md)))
+  group <- droplevels(factor(sample_md$group))
+  ## set ref to Negative so logFC is Positive vs Negative
+  group <- relevel(group, ref = ref)
+  
+  y <- DGEList(counts = pb_counts, samples = sample_md, group = group)
+  keep <- filterByExpr(y, group = group)   # sensible filtering by group
+  y <- y[keep,, keep.lib.sizes = FALSE]
+  y <- calcNormFactors(y)
+  
+  design <- model.matrix(~ group)          # Intercept + groupPositive
+  y <- estimateDisp(y, design)
+  fit <- glmQLFit(y, design)
+  qlf <- glmQLFTest(fit, coef = "groupPositive")
+  
+  top <- topTags(qlf, n = Inf)$table
+  ## tidy column names and add FDR
+  top$gene <- rownames(top)
+  top <- top[, c("gene","logFC","logCPM","F","PValue","FDR")]
+  list(table = top, qlf = qlf, fit = fit, y = y, design = design)
+}
+
+## ---- 3) Put it together & run ----
+## ---- Pseudobulk-level DGE (save to same folder) ----
+
+# 1) Create pseudobulk counts by sample
+pb <- pseudobulk_by_sample(
+  seu,
+  sample_col = "orig.ident",
+  group_col  = "IGRA_status",
+  assay      = "RNA",
+  min_cells_per_sample = 20,
+  keep_groups = c("Negative","Positive")
+)
+
+# 2) Run DGE (Positive vs Negative)
+dge <- run_edger_two_group(pb$counts, pb$sample_md, ref = "Negative")
+
+# 3) Save results to the same DGE folder
+out_file_pb <- file.path(dge_dir, "Pseudobulk_DGE_IGRApos_vs_neg.csv")
+write.csv(dge$table, out_file_pb, row.names = FALSE)
+
+message("Saved pseudobulk DGE results to: ", out_file_pb)
+
+suppressPackageStartupMessages({
+  library(dplyr)
+  library(ggplot2)
+  library(EnhancedVolcano)
+})
+
+## ---- Paths ----
+dge_dir  <- file.path(base_dir, "DGE")
+plot_dir <- file.path(dge_dir, "Volcano_Plots")
+dir.create(plot_dir, recursive = TRUE, showWarnings = FALSE)
+
+## ---- Load pseudobulk DGE (edgeR) ----
+# Default filename produced earlier; change if you used a different name.
+pb_csv <- file.path(dge_dir, "Pseudobulk_DGE_IGRApos_vs_neg.csv")
+if (!file.exists(pb_csv)) {
+  # fall back: pick the first CSV that looks like pseudobulk
+  cand <- list.files(dge_dir, pattern = "Pseudobulk.*\\.csv$", full.names = TRUE)
+  if (length(cand) == 0) stop("No pseudobulk CSV found in: ", dge_dir)
+  pb_csv <- cand[1]
+}
+
+deg <- read.csv(pb_csv, stringsAsFactors = FALSE)
+
+## Expecting edgeR columns: gene, logFC, logCPM, F, PValue, FDR
+req <- c("gene", "logFC", "PValue", "FDR")
+missing <- setdiff(req, colnames(deg))
+if (length(missing)) stop("Missing columns in pseudobulk CSV: ", paste(missing, collapse = ", "))
+
+deg <- deg %>%
+  filter(!is.na(gene) & gene != "") %>%
+  mutate(
+    # Safety: coerce numerics
+    logFC  = as.numeric(logFC),
+    PValue = as.numeric(PValue),
+    FDR    = as.numeric(FDR)
+  )
+
+## ---- Coloring rules (same style as before, adapted to edgeR cols) ----
+keyvals <- ifelse(
+  abs(deg$logFC) > 1.5 & deg$FDR < 0.01, "#CD0BBC",
+  ifelse(deg$FDR < 0.01, "#28E2E5", "gray30")
+)
+keyvals[is.na(keyvals)] <- "gray30"
+names(keyvals)[keyvals == "gray30"]  <- "NS"
+names(keyvals)[keyvals == "#28E2E5"] <- "adj(p-value) < 0.01"
+names(keyvals)[keyvals == "#CD0BBC"] <- "FC > 1.5"
+
+## ---- Volcano plot (edgeR: x=logFC, y=PValue, padj=FDR) ----
+vp <- EnhancedVolcano(
+  deg,
+  lab           = deg$gene,
+  x             = "logFC",
+  y             = "PValue",
+  pCutoffCol    = "FDR",
+  pCutoff       = 0.01,
+  FCcutoff      = 1.5,
+  xlab          = bquote(~Log[2]~ 'fold change (IGRA+ vs IGRA-)'),
+  pointSize     = 4.0,
+  labSize       = 3.0,
+  labCol        = "black",
+  labFace       = "bold",
+  colAlpha      = 4/5,
+  legendPosition= "right",
+  legendLabSize = 14,
+  legendIconSize= 4.0,
+  drawConnectors= TRUE,
+  widthConnectors = 1.0,
+  colConnectors   = "black",
+  title         = "Pseudobulk: IGRA+ vs IGRA-",
+  subtitle      = "edgeR (sample-level pseudobulk)",
+  colCustom     = keyvals
+)
+
+## ---- Save ----
+out_png <- file.path(plot_dir, "Volcano_Pseudobulk_IGRApos_vs_neg.png")
+ggsave(
+  filename = out_png,
+  plot     = vp + guides(color = guide_legend(reverse = TRUE)),
+  dpi      = 500,
+  width    = 10,
+  height   = 7
+)
+
+message("Saved pseudobulk volcano plot: ", out_png)
+table(pb$sample_md$group)
+summary(dge$table$PValue < 0.05)
+summary(dge$table$FDR < 0.05)
