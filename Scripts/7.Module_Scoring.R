@@ -8,6 +8,7 @@ library(viridis)
 library(stringr)
 library(scales)
 library(tidyr)
+library(SeuratExtend)
 
 # -----------------------------
 # Paths
@@ -998,7 +999,10 @@ plot_module_summary(stats_df, out_dir)
 base_dir <- "/home/akshay-iyer/Documents/Ben_TB_HIV_Mothers"
 annotation_dir <- file.path(base_dir, "Annotation")
 vlnplot_dir <- file.path(annotation_dir, "Post-Annotation/VlnPlots")
+vlnplot_dir_2 <- file.path(annotation_dir, "Post-Annotation/VlnPlots_Extra")
+
 dir.create(vlnplot_dir, showWarnings = FALSE)
+dir.create(vlnplot_dir_2, showWarnings = FALSE)
 
 igra_order <- c(
   "CD4+ naïve","CD4+ Activated","CD4+ Tfh","CD4+ Treg",
@@ -1029,8 +1033,45 @@ rna.features <- c(
   'TNFRSF4','TNFRSF9','TOX','TBX21','TRBC1','TRDC','TRDV1','TRDV2','TRGC1','TRGC2','TRGV9','XBP1',
   'XCL1','XCL2','ZBTB16','ZEB2'
 )
+
+rna.features.2 <- c(
+  'TRAC','TRBC2','IL7R',
+  'FOS','FOSB','JUN','JUNB','JUND','EGR1','EGR2','EGR3','NR4A2','NR4A3',
+  'DUSP1','DUSP2','DUSP4','DUSP5','IER2','IER3','TNFAIP3',
+  'HSP90AA1','HSPA1A','HSPA1B',
+  'TNFRSF4','TNFRSF9','TNFRSF18',
+  'CCR7','LEF1','KLF2','KLF3',
+  'CCL4','CXCR4','ITGA4','ITGB1','IL12RB2','CCR6','IL23R','TOX2','IL21',
+  'GZMB','CTSW','FGFBP2',
+  'TOP2A','HMGB2','TYMS','PCNA','STMN1',
+  'TUBB','UBE2C','CENPF',
+  'S100A4'
+)
 for (gene in rna.features) {
   vln_file <- file.path(vlnplot_dir, paste0("Vln_", gene, ".png"))
+  
+  # Skip if plot already exists
+  if (!file.exists(vln_file) && gene %in% rownames(seu)) {
+    p_vln <- VlnPlot2(
+      seu,
+      features = gene,
+      show.mean = TRUE,
+      mean_colors = c("red", "blue")
+    ) +
+      theme(plot.margin = unit(c(1, 1, 1, 2), "cm")) # Increase left margin (4th value)
+    
+    ggsave(
+      filename = vln_file,
+      plot = p_vln,
+      width = 10,
+      height = 8,
+      dpi = 300
+    )
+  }
+}
+
+for (gene in rna.features.2) {
+  vln_file <- file.path(vlnplot_dir_2, paste0("Vln_", gene, ".png"))
   
   # Skip if plot already exists
   if (!file.exists(vln_file) && gene %in% rownames(seu)) {
