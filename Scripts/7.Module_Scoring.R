@@ -884,7 +884,42 @@ plot_module_summary <- function(stats_df, out_dir) {
         PValue <= 1e-4 ~ "****",
         PValue <= 1e-3 ~ "***",
         PValue <= 1e-2 ~ "**",
-        PValue <= 5e-2 ~ "*",
+        PValue <= 5e-2 ~ "*",library(dplyr)
+        library(ggplot2)
+        library(ggpubr)
+        
+        # Load saved CSV
+        rpi_sample_overall <- read.csv(file.path(sample_out_dir, "RPI_per_sample_overall.csv"),
+                                       stringsAsFactors = FALSE)
+        
+        # Group colours
+        group_colours <- c("pos" = "#FF918A", "neg" = "#A3F8A9")  # adjust to match your exact Group labels
+        
+        # Check what your group labels actually are:
+        # unique(rpi_sample_overall$Group)
+        # Then update the names above accordingly e.g. c("IGRA+" = "#FF918A", "IGRA-" = "#A3F8A9")
+        
+        p_rpi_overall <- ggplot(rpi_sample_overall, aes(x = Group, y = Mean, fill = Group)) +
+          geom_boxplot(outlier.shape = NA, alpha = 0.7, width = 0.5) +
+          geom_jitter(width = 0.15, size = 2.5, colour = "black") +  # all dots black
+          scale_fill_manual(values = group_colours) +
+          stat_compare_means(method = "wilcox.test", label = "p.format", 
+                             label.x = 1.5, vjust = -0.5) +
+          labs(
+            title = "RPI per Sample (Overall)",
+            x     = NULL,
+            y     = "Mean MS_RPI"
+          ) +
+          theme_classic(base_size = 14) +
+          theme(legend.position = "none")   # remove legend
+        
+        ggsave(
+          filename = file.path(sample_out_dir, "RPI_per_sample_overall_replot.png"),
+          plot     = p_rpi_overall,
+          dpi      = 500,
+          width    = 5,
+          height   = 5
+        )
         TRUE ~ ""
       )
     )
@@ -1092,5 +1127,42 @@ for (gene in rna.features.2) {
     )
   }
 }
-table(seu$sample)
-table(seu$IGRA_status)
+
+###############
+library(dplyr)
+library(ggplot2)
+library(ggpubr)
+
+sample_out_dir <- '/home/akshay-iyer/Documents/Ben_TB_HIV_Mothers/Module_Scoring/Composites/Sample_Level'
+# Load saved CSV
+rpi_sample_overall <- read.csv(file.path(sample_out_dir, "RPI_per_sample_overall.csv"),
+                               stringsAsFactors = FALSE)
+
+# Group colours
+group_colours <- c("Positive" = "#FF918A", "Negative" = "#A3F8A9")  # adjust to match your exact Group labels
+
+# Check what your group labels actually are:
+# unique(rpi_sample_overall$Group)
+# Then update the names above accordingly e.g. c("IGRA+" = "#FF918A", "IGRA-" = "#A3F8A9")
+
+p_rpi_overall <- ggplot(rpi_sample_overall, aes(x = Group, y = Mean, fill = Group)) +
+  geom_boxplot(outlier.shape = NA, alpha = 0.7, width = 0.5) +
+  geom_jitter(width = 0.15, size = 2.5, colour = "black") +  # all dots black
+  scale_fill_manual(values = group_colours) +
+  stat_compare_means(method = "wilcox.test", label = "p.format", 
+                     label.x = 1.5, vjust = -0.5) +
+  labs(
+    title = "RPI per Sample (Overall)",
+    x     = NULL,
+    y     = "Mean MS_RPI"
+  ) +
+  theme_classic(base_size = 14) +
+  theme(legend.position = "none")   # remove legend
+
+ggsave(
+  filename = file.path(sample_out_dir, "RPI_per_sample_overall_replot.png"),
+  plot     = p_rpi_overall,
+  dpi      = 500,
+  width    = 5,
+  height   = 5
+)

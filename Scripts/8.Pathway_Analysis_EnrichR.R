@@ -93,7 +93,7 @@ run_enrichment <- function(gene_df, label, base_output) {
     
     p_tf <- ggplot(tf_df, aes(x = reorder(Term, Combined.Score), y = Combined.Score, fill = Database)) +
       geom_bar(stat = "identity") +
-      scale_y_log10() +  # <-- log scale here
+      scale_y_log10() +
       coord_flip() +
       labs(
         title = paste("Top Transcription Factors -", label),
@@ -101,14 +101,17 @@ run_enrichment <- function(gene_df, label, base_output) {
       ) +
       theme_minimal() +
       theme(
-        axis.text.y = element_text(size = 11, color = "black"),
-        axis.title = element_text(size = 14),
-        plot.title = element_text(size = 16, hjust = 0.5)
+        axis.text.y  = element_text(size = 14, color = "black", face = "bold"),
+        axis.text.x  = element_text(size = 12, color = "black"),
+        axis.title   = element_text(size = 16, face = "bold"),
+        plot.title   = element_text(size = 18, hjust = 0.5, face = "bold"),
+        legend.title = element_text(size = 13, face = "bold"),
+        legend.text  = element_text(size = 12)
       )
     
     ggsave(
       filename = file.path(base_output, "Plots", paste0(label, "_Transcription_Factors.png")),
-      plot = p_tf, width = 12, height = 10, dpi = 300, bg = "white"
+      plot = p_tf, width = 16, height = 12, dpi = 300, bg = "white"
     )
   }
   
@@ -119,7 +122,7 @@ run_enrichment <- function(gene_df, label, base_output) {
     
     p_path <- ggplot(pathway_df, aes(x = reorder(Term, Combined.Score), y = Combined.Score, fill = Database)) +
       geom_bar(stat = "identity") +
-      scale_y_log10() +  # <-- log scale here
+      scale_y_log10() +
       coord_flip() +
       labs(
         title = paste("Top Pathways -", label),
@@ -127,14 +130,17 @@ run_enrichment <- function(gene_df, label, base_output) {
       ) +
       theme_minimal() +
       theme(
-        axis.text.y = element_text(size = 11, color = "black"),
-        axis.title = element_text(size = 14),
-        plot.title = element_text(size = 16, hjust = 0.5)
+        axis.text.y  = element_text(size = 14, color = "black", face = "bold"),
+        axis.text.x  = element_text(size = 12, color = "black"),
+        axis.title   = element_text(size = 16, face = "bold"),
+        plot.title   = element_text(size = 18, hjust = 0.5, face = "bold"),
+        legend.title = element_text(size = 13, face = "bold"),
+        legend.text  = element_text(size = 12)
       )
     
     ggsave(
       filename = file.path(base_output, "Plots", paste0(label, "_Pathways.png")),
-      plot = p_path, width = 12, height = 10, dpi = 300, bg = "white"
+      plot = p_path, width = 16, height = 12, dpi = 300, bg = "white"
     )
   }
 }
@@ -236,7 +242,6 @@ plot_curated_tfs <- function(label,
     tf_cur <- tf_all %>%
       filter(str_detect(Term_norm, regex(pat, ignore_case = TRUE)),
              !is.na(Adjusted.P.value), Adjusted.P.value < 0.05)
-    # Terms never matched by substring:
     matched_set <- unique(tf_cur$Term_norm)
     missing <- curated_terms[!vapply(curated_terms, function(t)
       any(str_detect(matched_set, regex(.build_pattern(t, use_regex), ignore_case = TRUE))), logical(1))]
@@ -265,23 +270,24 @@ plot_curated_tfs <- function(label,
     ) +
     theme_minimal() +
     theme(
-      axis.text.y = element_text(size = 11, color = "black"),
-      axis.title = element_text(size = 14),
-      plot.title = element_text(size = 16, hjust = 0.5),
-      legend.title = element_text(size = 11),
-      legend.text = element_text(size = 10)
+      axis.text.y  = element_text(size = 14, color = "black", face = "bold"),
+      axis.text.x  = element_text(size = 12, color = "black"),
+      axis.title   = element_text(size = 16, face = "bold"),
+      plot.title   = element_text(size = 18, hjust = 0.5, face = "bold"),
+      legend.title = element_text(size = 13, face = "bold"),
+      legend.text  = element_text(size = 12)
     )
   
   out_dir <- file.path(base_output, comparison, "Plots")
   dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
   outfile_png <- file.path(out_dir, paste0(label, "_TFs_Curated.png"))
-  ggsave(outfile_png, plot = p, width = 12, height = 10, dpi = 300, bg = "white")
+  ggsave(outfile_png, plot = p, width = 16, height = 12, dpi = 300, bg = "white")  # ← inside function
   
   message("Saved: ", outfile_png)
   if (length(missing)) message("Not present/matched: ", paste(missing, collapse = " | "))
   
   invisible(p)
-}
+}  # ← closing brace
 
 # -----------------------------
 # Define your curated term lists

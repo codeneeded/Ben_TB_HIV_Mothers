@@ -1,6 +1,6 @@
 Cluster ID,Annotation,Notes,
 0,CD8+ TCM ,(G1-primed),
-1,CD4+ Activated,early activated/G1 primed cells,Split based on cxcr5 and icos co expresion
+1,CD4+ TCM,early activated/G1 primed cells,Split based on cxcr5 and icos co expresion
 2,CD4+ naïve, (G1 primed),
 3,NK Cytotoxic,,
 4,CD8+ TEMRA ,(GNLY+NKG7+PRF1+),

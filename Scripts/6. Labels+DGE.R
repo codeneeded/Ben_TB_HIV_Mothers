@@ -44,15 +44,15 @@ seu$IGRA_Annotation <- trimws(seu$IGRA_Annotation)  # remove leading/trailing sp
 seu$IGRA_Annotation <- as.character(seu$IGRA_Annotation)  # force to character
 seu$IGRA_Annotation <- factor(seu$IGRA_Annotation)        # back to factor
 
-# Check merge
+# Check mergebs download project -i 491055580 -o /media/akshay-iyer/Elements/10x_TB/BONE-19321 --concurrency high
+
+
 table(seu$IGRA_Annotation, useNA = "ifany")
 
 # --- Settings ---
 genes_for_split <- c("CXCR5", "ICOS")
 new_label <- "CD4+ Tfh"
 
-# Identify cells in cluster 1
-is_cluster1 <- seu$IGRA_Annotation == "CD4+ Activated"
 
 # Get expression (log-normalized data slot)
 expr <- GetAssayData(seu, layer = "data", assay = DefaultAssay(seu))  # updated for Seurat v5
@@ -135,6 +135,17 @@ ggsave(
   plot = p3, width = 10, height = 6, dpi = 300
 )
 
+
+p4 <- ClusterDistrPlot(
+  origin = seu$orig.ident,
+  cluster = seu$IGRA_Annotation,
+  condition = seu$IGRA_status,
+  cols = c('#A3F8A9','#FF918A')
+)
+ggsave(
+  filename = file.path(annotation_dir, "ClusterFrequency_Sample_IGRA_PosVsNeg.png"),
+  plot = p4, width = 10, height = 6, dpi = 300
+)
 ################################ DGE ##############################################################################
 
 # Paths
@@ -203,7 +214,7 @@ for (f in dge_files) {
   )
   keyvals[is.na(keyvals)] <- "gray30"
   names(keyvals)[keyvals == "gray30"] <- "NS"
-  names(keyvals)[keyvals == "#28E2E5"] <- "adj(p-value) < 0.01"
+  names(keyvals)[keyvals == "#28E2E5"] <- "adj(p-value) < 0.05"
   names(keyvals)[keyvals == "#CD0BBC"] <- "FC > 1.5"
   
   # Extract cluster name from filename
@@ -217,7 +228,7 @@ for (f in dge_files) {
     y = "p_val",              # raw p-value column
     pCutoffCol = "p_val_adj", # adjusted p-value column
     xlab = bquote(~Log[2]~ 'fold change'),
-    pCutoff = 0.01,
+    pCutoff = 0.05,
     FCcutoff = 1.5,
     pointSize = 4.0,
     labSize = 3.0,
@@ -244,7 +255,97 @@ for (f in dge_files) {
     height = 7
   )
 }
+# ─── Custom-label volcano plots for two specific clusters ───────────────────
 
+custom_labels <- list(
+  "CD4+_TCM" = c(
+    "RELA","JAK3","RPBJ","DNMT1","EZH1","SIN3A","HIF1A","DDIT4",
+    "TSC2","SQSTM1","FYCO1","BCL2","ZAP70","AKT3","DNAJB9","GPR15"
+  ),
+  "CD14+_Monocytes" = c(
+    "SMAD3","JARID2","PCH2","PCGF3","STAB1","THBD","PPARD","VEGFA",
+    "VCAN","SDC2","COL23A1","LUCAT1","STAT1","STAT2","TRIM25",
+    "RNF213","CYBB","NCF2","FGR","CTSS","LYZ","HLA-B"
+  )
+)
+for (clust_name in names(custom_labels)) {
+  
+  # Find matching file (pattern matches the cluster name inside filename)
+  matched_file <- dge_files[grepl(clust_name, dge_files, fixed = TRUE)]
+  
+  if (length(matched_file) == 0) {
+    message("No DGE file found for cluster: ", clust_name)
+    next
+  }
+  if (length(matched_file) > 1) {
+    message("Multiple files matched for: ", clust_name, " — using first: ", matched_file[1])
+    matched_file <- matched_file[1]
+  }
+  
+  # Read & prep (same as main loop)
+  deg <- read.csv(matched_file, stringsAsFactors = FALSE)
+  if (!"hgnc_symbol" %in% colnames(deg)) deg$hgnc_symbol <- rownames(deg)
+  deg <- deg %>% filter(!is.na(hgnc_symbol) & hgnc_symbol != "")
+  
+  # Colour logic
+  keyvals <- ifelse(
+    abs(deg$avg_log2FC) > 0.3 & deg$p_val_adj < 0.05, "#CD0BBC",
+    ifelse(deg$p_val_adj < 0.05, "#28E2E5", "gray30")
+  )
+  keyvals[is.na(keyvals)] <- "gray30"
+  names(keyvals)[keyvals == "gray30"]    <- "NS"
+  names(keyvals)[keyvals == "#28E2E5"]   <- "adj(p-value) < 0.05"
+  names(keyvals)[keyvals == "#CD0BBC"]   <- "FC > 0.3"
+  
+  # Only label the genes of interest; all others get ""
+  genes_to_label <- custom_labels[[clust_name]]
+  labels_vec <- ifelse(deg$X %in% genes_to_label, deg$X, "")
+  
+  vp <- EnhancedVolcano(
+    deg,
+    lab              = labels_vec,
+    selectLab        = genes_to_label,
+    x                = "avg_log2FC",
+    y                = "p_val",
+    pCutoffCol       = "p_val_adj",
+    xlab             = bquote(~Log[2]~ 'fold change'),
+    pCutoff          = 0.05,
+    FCcutoff         = 0.3,
+    pointSize        = 4.0,
+    labSize          = 3.5,
+    labCol           = "black",
+    labFace          = "bold",
+    colAlpha         = 4/5,
+    legendPosition   = "right",
+    legendLabSize    = 14,
+    legendIconSize   = 4.0,
+    drawConnectors   = TRUE,
+    widthConnectors  = 1.0,
+    colConnectors    = "black",
+    typeConnectors   = "open",
+    endsConnectors   = "last",
+    lengthConnectors = unit(0.01, "npc"),
+    boxedLabels      = TRUE,
+    max.overlaps     = Inf,
+    title            = paste0(clust_name, ": IGRA+ vs IGRA-"),
+    subtitle         = "Differential Gene Expression — selected genes labelled",
+    colCustom        = keyvals
+  )
+  
+  # Safe filename (spaces → underscores, + → plus)
+  safe_name <- gsub("[+ ]+", "_", clust_name)
+  safe_name <- gsub("_+$", "", safe_name)   # trim trailing underscores
+  
+  ggsave(
+    filename = file.path(plot_dir, paste0("Volcano_", safe_name, "_customLabels.png")),
+    plot     = vp + guides(color = guide_legend(reverse = TRUE)),
+    dpi      = 500,
+    width    = 10,
+    height   = 7
+  )
+  
+  message("Saved custom-label volcano for: ", clust_name)
+}
 ##################### Pseudobulking and DEG #######################################################################
 ## ---- Setup ----
 suppressPackageStartupMessages({
