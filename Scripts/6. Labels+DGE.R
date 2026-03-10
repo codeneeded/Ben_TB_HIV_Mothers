@@ -50,12 +50,16 @@ seu$IGRA_Annotation <- factor(seu$IGRA_Annotation)        # back to factor
 table(seu$IGRA_Annotation, useNA = "ifany")
 
 # --- Settings ---
+# --- Settings ---
 genes_for_split <- c("CXCR5", "ICOS")
-new_label <- "CD4+ Tfh"
+new_label       <- "CD4+ Tfh"
+source_cluster  <- "CD4+ TCM"  # replace with whatever the cluster is called in IGRA_Annotation
 
+# Define which cells are in the source cluster
+is_cluster1 <- seu$IGRA_Annotation == source_cluster
 
 # Get expression (log-normalized data slot)
-expr <- GetAssayData(seu, layer = "data", assay = DefaultAssay(seu))  # updated for Seurat v5
+expr <- GetAssayData(seu, layer = "data", assay = DefaultAssay(seu))
 
 # Co-expression: both genes > 0
 coexp <- Matrix::colSums(expr[genes_for_split, , drop = FALSE] > 0) == length(genes_for_split)
